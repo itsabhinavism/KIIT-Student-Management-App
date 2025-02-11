@@ -4,7 +4,7 @@ import 'attendance_screen.dart';import 'events_screen.dart';
 import 'fees_screen.dart';
 import 'qr_code_scanner.dart';
 import 'settings_screen.dart';
-import 'login_screen.dart'; // Import your login screen
+import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
