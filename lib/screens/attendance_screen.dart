@@ -1,38 +1,48 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 class AttendanceScreen extends StatelessWidget {
+  final List<Map<String, dynamic>> students = List.generate(50, (index) {
+    int rollNumber = 22053000 + index;
+    int totalClasses = 100;
+    int attendedClasses = Random().nextInt(101); // Random between 0-100
+    double attendancePercentage = (attendedClasses / totalClasses) * 100;
+
+    return {
+      'rollNumber': rollNumber,
+      'totalClasses': totalClasses,
+      'attendedClasses': attendedClasses,
+      'attendancePercentage': attendancePercentage.toStringAsFixed(2),
+    };
+  });
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.calendar_today,
-              size: 100,
-              color: Colors.blue,
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Attendance',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
-            // Add your attendance data display here
-            // Example:
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
+      appBar: AppBar(
+        title: Text('Attendance Details'),
+      ),
+      body: ListView.builder(
+        itemCount: students.length,
+        itemBuilder: (context, index) {
+          final student = students[index];
+          return Card(
+            margin: EdgeInsets.all(8.0),
+            child: ListTile(
+              leading: Icon(Icons.person, color: Colors.blue),
+              title: Text('Roll No: ${student['rollNumber']}'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Total Classes: 100'),
-                  Text('Classes Attended: 85'),
-                  Text('Attendance Percentage: 85%'),
+                  Text('Total Classes: ${student['totalClasses']}'),
+                  Text('Classes Attended: ${student['attendedClasses']}'),
+                  Text(
+                      'Attendance Percentage: ${student['attendancePercentage']}%'),
                 ],
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
