@@ -36,6 +36,7 @@ dependencies:
   qr_code_scanner: ^1.0.1  # For QR code scanning
   flutter_html: ^2.2.1    # For rendering HTML content
   webview_flutter: ^2.0.4  # For embedding web pages
+  flutter_riverpod: ^2.4.9
 
 
   # The following adds the Cupertino Icons font to your application.
