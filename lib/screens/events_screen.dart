@@ -1,116 +1,274 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/theme_provider.dart';
 
-class EventsScreen extends StatelessWidget {
-  final List<Map<String, String>> pastEvents = [
-    {'name': "Pratijja '24", 'date': "18 March 2024"},
-    {'name': "Kritarth V.06", 'date': "9 November 2024"},
-    {'name': "KIIT MUN '24", 'date': "26-27-28 October 2024"},
-    {'name': "ICDCIT 2024", 'date': "12 December 2024"},
-    {'name': "KIITFEST '25", 'date': "14-15-16 February 2025"},
-    {'name': "CHIMERA '25", 'date': "15 March 2025"},
+class EventsScreen extends ConsumerWidget {
+  final List<Map<String, dynamic>> pastEvents = [
+    {
+      'id': '1',
+      'name': "Pratijja '24",
+      'date': "18 March 2024",
+      'icon': Icons.sports_esports,
+      'color': Colors.amber,
+      'category': "Gaming",
+      'location': "Main Auditorium",
+      'description': "Annual gaming festival with competitions and workshops",
+    },
+    {
+      'id': '2',
+      'name': "Kritarth V.06",
+      'date': "9 November 2024",
+      'icon': Icons.people,
+      'color': Colors.blue,
+      'category': "Cultural",
+      'location': "Open Air Theater",
+      'description': "Cultural fest showcasing talent from across India",
+    },
+    // Add other events with same structure...
   ];
 
-  final List<Map<String, String>> upcomingEvents = [
-    {'name': "TedXKIIT", 'date': "5 April 2025"},
-    {'name': "KIITMUN '25", 'date': "August 2025"},
-    {'name': "Halloween", 'date': "October 2025"},
-    {'name': "Kritarth", 'date': "November 2025"},
+  final List<Map<String, dynamic>> upcomingEvents = [
+    {
+      'id': '7',
+      'name': "TedXKIIT",
+      'date': "5 April 2025",
+      'icon': Icons.mic,
+      'color': Colors.orange,
+      'category': "Conference",
+      'location': "Campus Auditorium",
+      'description': "Ideas worth spreading from inspiring speakers",
+    },
+    // Add other events with same structure...
   ];
+  EventsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDarkMode = ref.watch(themeProvider) == AppTheme.dark;
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Events'),
+        title: const Text('KIIT Events'),
+        centerTitle: true,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDarkMode
+                  ? [Colors.blueGrey.shade800, Colors.blueGrey.shade900]
+                  : [Colors.blue.shade600, Colors.blue.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => _showSearch(context),
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.white, Colors.blue.shade50],
+          gradient: isDarkMode
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.grey.shade900,
+                    Colors.grey.shade800,
+                  ],
+                )
+              : LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.blue.shade50,
+                    Colors.blue.shade100,
+                  ],
+                ),
+        ),
+        child: DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.only(top: 16),
+                child: const TabBar(
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelStyle: TextStyle(fontWeight: FontWeight.bold),
+                  tabs: [
+                    Tab(text: 'Upcoming', icon: Icon(Icons.upcoming)),
+                    Tab(text: 'Past Events', icon: Icon(Icons.history)),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _buildEventList(upcomingEvents, context, isDarkMode, theme),
+                    _buildEventList(pastEvents, context, isDarkMode, theme),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.event,
-              size: 100,
-              color: Colors.purple,
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Events',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
-            Expanded(
+      ),
+    );
+  }
+
+  Widget _buildEventList(List<Map<String, dynamic>> events,
+      BuildContext context, bool isDarkMode, ThemeData theme) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: events.length,
+      itemBuilder: (context, index) {
+        final event = events[index];
+        return Card(
+          elevation: 3,
+          margin: const EdgeInsets.only(bottom: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          color: isDarkMode
+              ? Colors.blueGrey.shade800.withOpacity(0.7)
+              : Colors.white,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/event-detail',
+                arguments: event,
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: event['color'].withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      event['icon'],
+                      color: event['color'],
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Upcoming Events:',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
+                          event['name'],
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                          ),
                         ),
-                        ...upcomingEvents.map((event) => ListTile(
-                              tileColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                side: BorderSide(color: Colors.green, width: 1),
-                              ),
-                              title: Text(event['name']!),
-                              subtitle: Text(event['date']!),
-                              leading: Icon(Icons.calendar_today,
-                                  color: Colors.green),
-                            )),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${event['date']} • ${event['location']}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: isDarkMode
+                                ? Colors.white70
+                                : Colors.grey.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Chip(
+                          label: Text(event['category']),
+                          backgroundColor: event['color'].withOpacity(0.1),
+                          labelStyle: TextStyle(color: event['color']),
+                        ),
                       ],
                     ),
                   ),
-                  SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Past Events:',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        Expanded(
-                          child: ListView(
-                            shrinkWrap: true,
-                            children: pastEvents
-                                .map((event) => ListTile(
-                                      tileColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                        side: BorderSide(
-                                            color: Colors.red, width: 1),
-                                      ),
-                                      title: Text(event['name']!),
-                                      subtitle: Text(event['date']!),
-                                      leading: Icon(Icons.history,
-                                          color: Colors.red),
-                                    ))
-                                .toList(),
-                          ),
-                        ),
-                      ],
-                    ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: isDarkMode ? Colors.white54 : Colors.grey.shade500,
                   ),
                 ],
               ),
             ),
-          ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSearch(BuildContext context) {
+    showSearch(
+      context: context,
+      delegate:
+          _EventSearchDelegate(events: [...upcomingEvents, ...pastEvents]),
+    );
+  }
+}
+
+class _EventSearchDelegate extends SearchDelegate {
+  final List<Map<String, dynamic>> events;
+
+  _EventSearchDelegate({required this.events});
+
+  @override
+  List<Widget> buildActions(BuildContext context) => [
+        IconButton(
+          icon: const Icon(Icons.clear),
+          onPressed: () => query = '',
         ),
-      ),
+      ];
+
+  @override
+  Widget buildLeading(BuildContext context) => IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => close(context, null),
+      );
+
+  @override
+  Widget buildResults(BuildContext context) => _buildSearchResults();
+
+  @override
+  Widget buildSuggestions(BuildContext context) => _buildSearchResults();
+
+  Widget _buildSearchResults() {
+    final results = query.isEmpty
+        ? events
+        : events
+            .where((e) =>
+                e['name'].toLowerCase().contains(query.toLowerCase()) ||
+                e['category'].toLowerCase().contains(query.toLowerCase()))
+            .toList();
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final event = results[index];
+        return Card(
+          // Similar card structure as in main list
+          child: ListTile(
+            leading: Icon(event['icon'], color: event['color']),
+            title: Text(event['name']),
+            subtitle: Text(event['date']),
+            onTap: () {
+              close(context, null);
+              Navigator.pushNamed(
+                context,
+                '/event-detail',
+                arguments: event,
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
