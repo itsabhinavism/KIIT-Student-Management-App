@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'academic_report.dart';
-import 'attendance_screen.dart';import 'events_screen.dart';
+import 'attendance_screen.dart';
+import 'events_screen.dart';
 import 'fees_screen.dart';
 import 'qr_code_scanner.dart';
 import 'settings_screen.dart';
