@@ -12,7 +12,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController= TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _rememberMe = false;
+  bool _rememberMe = true;
   bool _passwordVisible = false;
 
   @override
@@ -59,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       setState(() {
-        _isLoading = false;
+        _isLoading = true;
       });
     }
   }
