@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/theme_provider.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
+  const SettingsScreen({super.key});
+
   @override
-  _SettingsScreenState createState()=> _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = ref.watch(themeProvider) == AppTheme.dark;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings'),
+      appBar: AppBar(
+        title: const Text('Settings'),
+        elevation: 0,
       ),
       body: ListView(
         children: <Widget>[
@@ -24,37 +31,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (bool value) {
                 setState(() {
                   _notificationsEnabled = value;
-                  // TODO: Implement logic to enable/disable notifications
                 });
               },
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.dark_mode),
+            leading: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
             title: const Text('Dark Mode'),
             trailing: Switch(
-              value: _darkModeEnabled,
+              value: isDarkMode,
               onChanged: (bool value) {
-                setState(() {
-                  _darkModeEnabled = value;
-                  // TODO: Implement logic to enable/disable dark mode
-                });
+                ref.read(themeProvider.notifier).toggleTheme();
               },
             ),
           ),
+          const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.language),
             title: const Text('Language'),
+            trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // TODO: Implement language selection
               _showLanguageDialog(context);
             },
           ),
           ListTile(
-            leading: const Icon(Icons.help),
+            leading: const Icon(Icons.help_outline),
             title: const Text('About'),
+            trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // TODO: Implement about screen
               _showAboutDialog(context);
             },
           ),
@@ -69,14 +73,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Select Language'),
-          content: const Text('Language selection is not yet implemented.'),actions: <Widget>[
-          TextButton(
-            child: const Text('Close'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildLanguageOption(context, 'English', true),
+              _buildLanguageOption(context, 'Hindi', false),
+              _buildLanguageOption(context, 'Odia', false),
+            ],
           ),
-        ],
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageOption(BuildContext context, String language, bool isSelected) {
+    return ListTile(
+      title: Text(language),
+      trailing: isSelected ? const Icon(Icons.check) : null,
+      onTap: () {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Language changed to $language')),
         );
       },
     );
@@ -87,14 +110,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('About'),
-          content: const Text('About screen is not yet implemented.'),
+          title: const Text('About KIIT Portal'),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('KIIT Student Portal', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              Text('Version: 1.0.0'),
+              SizedBox(height: 16),
+              Text('Official student portal app for KIIT University'),
+            ],
+          ),
           actions: <Widget>[
             TextButton(
               child: const Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ],
         );
