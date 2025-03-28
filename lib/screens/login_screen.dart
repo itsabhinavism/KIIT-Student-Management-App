@@ -9,10 +9,10 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController= TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _rememberMe = true;
+  bool _rememberMe = false;
   bool _passwordVisible = false;
 
   @override
@@ -26,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _rememberMe = prefs.getBool('rememberMe') ?? false;
       if (_rememberMe) {
-        _usernameController.text =prefs.getString('username') ?? '';
+        _usernameController.text = prefs.getString('username') ?? '';
       }
     });
   }
@@ -40,18 +40,16 @@ class _LoginScreenState extends State<LoginScreen> {
       final username = _usernameController.text;
       final password = _passwordController.text;
 
-      // Simulate login API call (replace with actual API call)
-      await Future.delayed(const Duration(seconds: 2)); // Simulate network delay
+      // Simulate login API call
+      await Future.delayed(const Duration(seconds: 1));
 
       if (username == 'student' && password == 'password') {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('username', username);
         await prefs.setBool('rememberMe', _rememberMe);
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
+        await prefs.setBool('isLoggedIn', true);
+        
+        _navigateToHome();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid credentials')),
@@ -59,9 +57,22 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       setState(() {
-        _isLoading = true;
+        _isLoading = false;
       });
     }
+  }
+
+  Future<void> _skipLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', false);
+    _navigateToHome();
+  }
+
+  void _navigateToHome() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => HomeScreen()),
+    );
   }
 
   @override
@@ -91,6 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        // Your logo/icon here
                         const Icon(
                           Icons.school,
                           size: 80,
@@ -112,13 +124,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             }
                             return null;
                           },
-                          textInputAction: TextInputAction.next,
                         ),
                         const SizedBox(height: 16),
-                        // Password Field
                         TextFormField(
                           controller: _passwordController,
-                          obscureText: !_passwordVisible, // Toggle password visibility
+                          obscureText: !_passwordVisible,
                           decoration: InputDecoration(
                             labelText: 'Password',
                             border: OutlineInputBorder(
@@ -130,10 +140,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 _passwordVisible
                                     ? Icons.visibility
                                     : Icons.visibility_off,
-                                color: Theme.of(context).primaryColorDark,
                               ),
                               onPressed: () {
-                                setState(() {_passwordVisible = !_passwordVisible;
+                                setState(() {
+                                  _passwordVisible = !_passwordVisible;
                                 });
                               },
                             ),
@@ -144,7 +154,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             }
                             return null;
                           },
-                          textInputAction: TextInputAction.done,
                         ),
                         const SizedBox(height: 16),
                         Row(
@@ -163,16 +172,26 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 24),
                         _isLoading
                             ? const CircularProgressIndicator()
-                            : ElevatedButton(
-                          onPressed: _login,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 48, vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            : SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _login,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text('Login'),
+                                ),
+                              ),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: _skipLogin,
+                          child: const Text(
+                            'Continue as Guest',
+                            style: TextStyle(color: Colors.blue),
                           ),
-                          child: const Text('Login'),
                         ),
                       ],
                     ),
