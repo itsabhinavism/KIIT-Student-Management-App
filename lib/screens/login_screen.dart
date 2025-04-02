@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'home_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -9,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _rememberMe = false;
@@ -21,38 +24,54 @@ class _LoginScreenState extends State<LoginScreen> {
     _loadRememberMe();
   }
 
-  Future<void> _loadRememberMe() async {
+  Future _loadRememberMe() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _rememberMe = prefs.getBool('rememberMe') ?? false;
       if (_rememberMe) {
-        _usernameController.text = prefs.getString('username') ?? '';
+        _emailController.text = prefs.getString('email') ?? '';
       }
     });
   }
 
-  Future<void> _login() async {
+  Future _login() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      final username = _usernameController.text;
-      final password = _passwordController.text;
+      try {
+        final email = _emailController.text;
+        final password = _passwordController.text;
 
-      // Simulate login API call
-      await Future.delayed(const Duration(seconds: 1));
+        // Authenticate with Firebase Auth
+        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
 
-      if (username == 'student' && password == 'password') {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('username', username);
-        await prefs.setBool('rememberMe', _rememberMe);
-        await prefs.setBool('isLoggedIn', true);
-        
+        if (_rememberMe) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('email', email);
+          await prefs.setBool('rememberMe', _rememberMe);
+          await prefs.setBool('isLoggedIn', true);
+        }
+
         _navigateToHome();
-      } else {
+      } on FirebaseAuthException catch (e) {
+        String errorMessage = 'Authentication failed';
+        if (e.code == 'user-not-found') {
+          errorMessage = 'No user found with this email';
+        } else if (e.code == 'wrong-password') {
+          errorMessage = 'Wrong password provided';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid credentials')),
+          SnackBar(content: Text(errorMessage)),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
         );
       }
 
@@ -62,16 +81,17 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _skipLogin() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', false);
-    _navigateToHome();
-  }
-
   void _navigateToHome() {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => HomeScreen()),
+    );
+  }
+
+  void _navigateToRegister() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => RegisterScreen()),
     );
   }
 
@@ -102,7 +122,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Your logo/icon here
                         const Icon(
                           Icons.school,
                           size: 80,
@@ -110,17 +129,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 24),
                         TextFormField(
-                          controller: _usernameController,
+                          controller: _emailController,
                           decoration: InputDecoration(
-                            labelText: 'Username',
+                            labelText: 'Email',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            prefixIcon: const Icon(Icons.person),
+                            prefixIcon: const Icon(Icons.email),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your username';
+                              return 'Please enter your email';
                             }
                             return null;
                           },
@@ -173,23 +192,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         _isLoading
                             ? const CircularProgressIndicator()
                             : SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: _login,
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: const Text('Login'),
-                                ),
-                              ),
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _login,
+                            child: const Text('Login'),
+                          ),
+                        ),
                         const SizedBox(height: 16),
                         TextButton(
-                          onPressed: _skipLogin,
+                          onPressed: _navigateToRegister,
                           child: const Text(
-                            'Continue as Guest',
+                            "Don't have an account? Register",
                             style: TextStyle(color: Colors.blue),
                           ),
                         ),

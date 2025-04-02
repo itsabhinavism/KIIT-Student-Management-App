@@ -24,7 +24,6 @@ class EventsScreen extends ConsumerWidget {
       'location': "Open Air Theater",
       'description': "Cultural fest showcasing talent from across India",
     },
-    // Add other events with same structure...
   ];
 
   final List<Map<String, dynamic>> upcomingEvents = [
@@ -38,7 +37,6 @@ class EventsScreen extends ConsumerWidget {
       'location': "Campus Auditorium",
       'description': "Ideas worth spreading from inspiring speakers",
     },
-    // Add other events with same structure...
   ];
   EventsScreen({super.key});
 
@@ -56,8 +54,8 @@ class EventsScreen extends ConsumerWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: isDarkMode
-                  ? [Colors.blueGrey.shade800, Colors.blueGrey.shade900]
-                  : [Colors.blue.shade600, Colors.blue.shade400],
+                  ? [Colors.red.shade800, Colors.red.shade900]
+                  : [Colors.red.shade400, Colors.red.shade300],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -74,21 +72,21 @@ class EventsScreen extends ConsumerWidget {
         decoration: BoxDecoration(
           gradient: isDarkMode
               ? LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.grey.shade900,
-                    Colors.grey.shade800,
-                  ],
-                )
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.grey.shade900,
+              Colors.grey.shade800,
+            ],
+          )
               : LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.blue.shade50,
-                    Colors.blue.shade100,
-                  ],
-                ),
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.red.shade100,
+              Colors.red.shade200,
+            ],
+          ),
         ),
         child: DefaultTabController(
           length: 2,
@@ -182,12 +180,6 @@ class EventsScreen extends ConsumerWidget {
                                 : Colors.grey.shade700,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Chip(
-                          label: Text(event['category']),
-                          backgroundColor: event['color'].withOpacity(0.1),
-                          labelStyle: TextStyle(color: event['color']),
-                        ),
                       ],
                     ),
                   ),
@@ -207,8 +199,7 @@ class EventsScreen extends ConsumerWidget {
   void _showSearch(BuildContext context) {
     showSearch(
       context: context,
-      delegate:
-          _EventSearchDelegate(events: [...upcomingEvents, ...pastEvents]),
+      delegate: _EventSearchDelegate(events: [...upcomingEvents, ...pastEvents]),
     );
   }
 }
@@ -220,17 +211,17 @@ class _EventSearchDelegate extends SearchDelegate {
 
   @override
   List<Widget> buildActions(BuildContext context) => [
-        IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () => query = '',
-        ),
-      ];
+    IconButton(
+      icon: const Icon(Icons.clear),
+      onPressed: () => query = '',
+    ),
+  ];
 
   @override
   Widget buildLeading(BuildContext context) => IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => close(context, null),
-      );
+    icon: const Icon(Icons.arrow_back),
+    onPressed: () => close(context, null),
+  );
 
   @override
   Widget buildResults(BuildContext context) => _buildSearchResults();
@@ -239,36 +230,12 @@ class _EventSearchDelegate extends SearchDelegate {
   Widget buildSuggestions(BuildContext context) => _buildSearchResults();
 
   Widget _buildSearchResults() {
-    final results = query.isEmpty
-        ? events
-        : events
-            .where((e) =>
-                e['name'].toLowerCase().contains(query.toLowerCase()) ||
-                e['category'].toLowerCase().contains(query.toLowerCase()))
-            .toList();
-
+    final results = events.where((e) => e['name'].toLowerCase().contains(query.toLowerCase())).toList();
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
       itemCount: results.length,
-      itemBuilder: (context, index) {
-        final event = results[index];
-        return Card(
-          // Similar card structure as in main list
-          child: ListTile(
-            leading: Icon(event['icon'], color: event['color']),
-            title: Text(event['name']),
-            subtitle: Text(event['date']),
-            onTap: () {
-              close(context, null);
-              Navigator.pushNamed(
-                context,
-                '/event-detail',
-                arguments: event,
-              );
-            },
-          ),
-        );
-      },
+      itemBuilder: (context, index) => ListTile(
+        title: Text(results[index]['name']),
+      ),
     );
   }
 }

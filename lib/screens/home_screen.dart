@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sap_portal_app/screens/timetable_screen.dart';
 import 'academic_report.dart';
 import 'attendance_screen.dart';
 import 'events_screen.dart';
@@ -20,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
     FeesScreen(),
     AcademicReportScreen(),
     EventsScreen(),
+    TimeTableScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -152,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(
               icon: const Icon(Icons.calendar_today),
               label: 'Attendance',
-              backgroundColor: Colors.blue.shade900,
+              backgroundColor: Colors.lightBlue.shade900,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.attach_money),
@@ -167,6 +169,11 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(
               icon: const Icon(Icons.event),
               label: 'Events',
+              backgroundColor: Colors.red.shade900,
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.schedule),
+              label: 'Timetable',
               backgroundColor: Colors.purple.shade900,
             ),
           ],

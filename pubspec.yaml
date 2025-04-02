@@ -1,4 +1,4 @@
-name: kiit_portal_app
+name: sap_portal_app
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -37,6 +37,13 @@ dependencies:
   flutter_html: ^2.2.1    # For rendering HTML content
   webview_flutter: ^2.0.4  # For embedding web pages
   flutter_riverpod: ^2.4.9
+  intl: ^0.18.1
+  firebase_auth_web: ^5.9.3 # Upgraded to latest
+  firebase_auth: ^4.7.2
+  cloud_firestore: ^4.8.4
+  firebase_core: ^2.18.0
+  firebase_database: ^10.5.7  # Compatible version
+
 
 
   # The following adds the Cupertino Icons font to your application.
