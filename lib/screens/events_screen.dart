@@ -24,12 +24,91 @@ class EventsScreen extends ConsumerWidget {
       'location': "Open Air Theater",
       'description': "Cultural fest showcasing talent from across India",
     },
-    // Add other events with same structure...
+    {
+      'id': '3',
+      'name': "TechExpo 2024",
+      'date': "15 February 2024",
+      'icon': Icons.computer,
+      'color': Colors.deepPurple,
+      'category': "Technology",
+      'location': "Convention Center",
+      'description': "Exhibition of latest tech innovations and demos",
+    },
+    {
+      'id': '4',
+      'name': "Startup Weekend",
+      'date': "20 January 2024",
+      'icon': Icons.lightbulb,
+      'color': Colors.teal,
+      'category': "Entrepreneurship",
+      'location': "Innovation Hub",
+      'description': "Pitch your startup ideas and win funding",
+    },
+    {
+      'id': '5',
+      'name': "KIIT MUN 2023",
+      'date': "25 October 2023",
+      'icon': Icons.account_balance,
+      'color': Colors.orange,
+      'category': "Debate",
+      'location': "Law Campus",
+      'description': "Model United Nations with global participation",
+    },
+    {
+      'id': '6',
+      'name': "DesignCon 2023",
+      'date': "12 September 2023",
+      'icon': Icons.design_services,
+      'color': Colors.pink,
+      'category': "Design",
+      'location': "Design Block",
+      'description': "Creative design conference and showcase",
+    },
+    {
+      'id': '7',
+      'name': "AI Symposium",
+      'date': "5 August 2023",
+      'icon': Icons.memory,
+      'color': Colors.red,
+      'category': "AI",
+      'location': "Main Hall",
+      'description': "Talks on latest AI trends and research",
+    },
+    {
+      'id': '8',
+      'name': "Photography Expo",
+      'date': "22 July 2023",
+      'icon': Icons.camera_alt,
+      'color': Colors.brown,
+      'category': "Art",
+      'location': "Exhibition Gallery",
+      'description': "Showcase of best student photography",
+    },
+    {
+      'id': '9',
+      'name': "LitFest 2023",
+      'date': "10 June 2023",
+      'icon': Icons.menu_book,
+      'color': Colors.cyan,
+      'category': "Literature",
+      'location': "Central Library",
+      'description': "Literary fest featuring authors and poets",
+    },
+    {
+      'id': '10',
+      'name': "Dance Off 2023",
+      'date': "5 May 2023",
+      'icon': Icons.music_note,
+      'color': Colors.purple,
+      'category': "Dance",
+      'location': "Dance Hall",
+      'description': "Dance battle between university teams",
+    },
   ];
 
   final List<Map<String, dynamic>> upcomingEvents = [
     {
-      'id': '7',
+      'id': '1',
       'name': "TedXKIIT",
       'date': "5 April 2025",
       'icon': Icons.mic,
@@ -38,8 +117,98 @@ class EventsScreen extends ConsumerWidget {
       'location': "Campus Auditorium",
       'description': "Ideas worth spreading from inspiring speakers",
     },
-    // Add other events with same structure...
+    {
+      'id': '2',
+      'name': "KIIT Sports Meet",
+      'date': "20 April 2025",
+      'icon': Icons.sports_soccer,
+      'color': Colors.green,
+      'category': "Sports",
+      'location': "Sports Complex",
+      'description': "Annual sports meet with inter-college tournaments",
+    },
+    {
+      'id': '3',
+      'name': "Code Fiesta",
+      'date': "15 May 2025",
+      'icon': Icons.code,
+      'color': Colors.indigo,
+      'category': "Hackathon",
+      'location': "Tech Park",
+      'description': "24-hour coding competition with exciting prizes",
+    },
+    {
+      'id': '4',
+      'name': "Eco Fest 2025",
+      'date': "8 June 2025",
+      'icon': Icons.eco,
+      'color': Colors.lightGreen,
+      'category': "Environment",
+      'location': "Green Campus",
+      'description': "Awareness fest for sustainable living and ecology",
+    },
+    {
+      'id': '5',
+      'name': "Music Mania",
+      'date': "25 June 2025",
+      'icon': Icons.music_note,
+      'color': Colors.deepOrange,
+      'category': "Music",
+      'location': "Open Arena",
+      'description': "Battle of bands and solo performances",
+    },
+    {
+      'id': '6',
+      'name': "Legal Awareness Drive",
+      'date': "10 July 2025",
+      'icon': Icons.gavel,
+      'color': Colors.blueGrey,
+      'category': "Law",
+      'location': "Law Campus",
+      'description': "Workshops and sessions on legal literacy",
+    },
+    {
+      'id': '7',
+      'name': "Blockchain Bootcamp",
+      'date': "30 July 2025",
+      'icon': Icons.lock,
+      'color': Colors.blueAccent,
+      'category': "Technology",
+      'location': "IT Block",
+      'description': "Hands-on workshop on blockchain applications",
+    },
+    {
+      'id': '8',
+      'name': "Robotics Challenge",
+      'date': "12 August 2025",
+      'icon': Icons.precision_manufacturing,
+      'color': Colors.cyan,
+      'category': "Engineering",
+      'location': "Robotics Lab",
+      'description': "National-level robotics design and programming",
+    },
+    {
+      'id': '9',
+      'name': "Innovation Fair",
+      'date': "1 September 2025",
+      'icon': Icons.science,
+      'color': Colors.pink,
+      'category': "Innovation",
+      'location': "Innovation Hub",
+      'description': "Showcase of creative student inventions",
+    },
+    {
+      'id': '10',
+      'name': "KIIT Job Fair",
+      'date': "20 September 2025",
+      'icon': Icons.work,
+      'color': Colors.teal,
+      'category': "Career",
+      'location': "Placement Cell",
+      'description': "Career opportunities and company meetups",
+    },
   ];
+
   EventsScreen({super.key});
 
   @override
@@ -56,8 +225,8 @@ class EventsScreen extends ConsumerWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: isDarkMode
-                  ? [Colors.blueGrey.shade800, Colors.blueGrey.shade900]
-                  : [Colors.blue.shade600, Colors.blue.shade400],
+                  ? [Colors.red.shade800, Colors.red.shade900]
+                  : [Colors.red.shade400, Colors.red.shade300],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -74,21 +243,15 @@ class EventsScreen extends ConsumerWidget {
         decoration: BoxDecoration(
           gradient: isDarkMode
               ? LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.grey.shade900,
-                    Colors.grey.shade800,
-                  ],
-                )
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.grey.shade900, Colors.grey.shade800],
+          )
               : LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.blue.shade50,
-                    Colors.blue.shade100,
-                  ],
-                ),
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.red.shade100, Colors.red.shade200],
+          ),
         ),
         child: DefaultTabController(
           length: 2,
@@ -182,12 +345,6 @@ class EventsScreen extends ConsumerWidget {
                                 : Colors.grey.shade700,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Chip(
-                          label: Text(event['category']),
-                          backgroundColor: event['color'].withOpacity(0.1),
-                          labelStyle: TextStyle(color: event['color']),
-                        ),
                       ],
                     ),
                   ),
@@ -208,7 +365,7 @@ class EventsScreen extends ConsumerWidget {
     showSearch(
       context: context,
       delegate:
-          _EventSearchDelegate(events: [...upcomingEvents, ...pastEvents]),
+      _EventSearchDelegate(events: [...upcomingEvents, ...pastEvents]),
     );
   }
 }
@@ -220,17 +377,17 @@ class _EventSearchDelegate extends SearchDelegate {
 
   @override
   List<Widget> buildActions(BuildContext context) => [
-        IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () => query = '',
-        ),
-      ];
+    IconButton(
+      icon: const Icon(Icons.clear),
+      onPressed: () => query = '',
+    ),
+  ];
 
   @override
   Widget buildLeading(BuildContext context) => IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => close(context, null),
-      );
+    icon: const Icon(Icons.arrow_back),
+    onPressed: () => close(context, null),
+  );
 
   @override
   Widget buildResults(BuildContext context) => _buildSearchResults();
@@ -239,36 +396,14 @@ class _EventSearchDelegate extends SearchDelegate {
   Widget buildSuggestions(BuildContext context) => _buildSearchResults();
 
   Widget _buildSearchResults() {
-    final results = query.isEmpty
-        ? events
-        : events
-            .where((e) =>
-                e['name'].toLowerCase().contains(query.toLowerCase()) ||
-                e['category'].toLowerCase().contains(query.toLowerCase()))
-            .toList();
-
+    final results = events
+        .where((e) => e['name'].toLowerCase().contains(query.toLowerCase()))
+        .toList();
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
       itemCount: results.length,
-      itemBuilder: (context, index) {
-        final event = results[index];
-        return Card(
-          // Similar card structure as in main list
-          child: ListTile(
-            leading: Icon(event['icon'], color: event['color']),
-            title: Text(event['name']),
-            subtitle: Text(event['date']),
-            onTap: () {
-              close(context, null);
-              Navigator.pushNamed(
-                context,
-                '/event-detail',
-                arguments: event,
-              );
-            },
-          ),
-        );
-      },
+      itemBuilder: (context, index) => ListTile(
+        title: Text(results[index]['name']),
+      ),
     );
   }
 }

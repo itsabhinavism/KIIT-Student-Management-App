@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
+import 'register_screen.dart';
+import 'admin_student_details.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
+
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _adminEmailController = TextEditingController();
+  final _adminPasswordController = TextEditingController();
+
   bool _isLoading = false;
   bool _rememberMe = false;
   bool _passwordVisible = false;
+  bool _isAdminLogin = false;
 
   @override
   void initState() {
@@ -26,52 +35,63 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _rememberMe = prefs.getBool('rememberMe') ?? false;
       if (_rememberMe) {
-        _usernameController.text = prefs.getString('username') ?? '';
+        _emailController.text = prefs.getString('email') ?? '';
       }
     });
   }
 
   Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+    if (!_formKey.currentState!.validate()) return;
 
-      final username = _usernameController.text;
-      final password = _passwordController.text;
+    setState(() => _isLoading = true);
 
-      // Simulate login API call
-      await Future.delayed(const Duration(seconds: 1));
-
-      if (username == 'student' && password == 'password') {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('username', username);
-        await prefs.setBool('rememberMe', _rememberMe);
-        await prefs.setBool('isLoggedIn', true);
-        
-        _navigateToHome();
+    try {
+      if (_isAdminLogin) {
+        if (_adminEmailController.text == 'admin@gmail.com' &&
+            _adminPasswordController.text == 'kiit123') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => AdminStudentDetails()),
+          );
+        } else {
+          throw Exception('Invalid admin credentials');
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid credentials')),
+        final email = _emailController.text.trim();
+        final password = _passwordController.text.trim();
+
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        if (_rememberMe) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('email', email);
+          await prefs.setBool('rememberMe', _rememberMe);
+          await prefs.setBool('isLoggedIn', true);
+        }
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
         );
       }
-
-      setState(() {
-        _isLoading = false;
-      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  Future<void> _skipLogin() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', false);
-    _navigateToHome();
-  }
-
-  void _navigateToHome() {
+  void _navigateToRegister() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => HomeScreen()),
+      MaterialPageRoute(builder: (_) => const AdminStudentDetails()),
     );
   }
 
@@ -81,49 +101,48 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
+            colors: [Colors.blue.shade900, Colors.blue.shade500],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.blue.shade900, Colors.blue.shade500],
           ),
         ),
         child: Center(
           child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Card(
-                elevation: 8,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Your logo/icon here
-                        const Icon(
-                          Icons.school,
-                          size: 80,
-                          color: Colors.blue,
-                        ),
-                        const SizedBox(height: 24),
-                        TextFormField(
-                          controller: _usernameController,
-                          decoration: InputDecoration(
-                            labelText: 'Username',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            prefixIcon: const Icon(Icons.person),
+            padding: const EdgeInsets.all(24.0),
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.school, size: 80, color: Colors.blue),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Student Login'),
+                          Switch(
+                            value: _isAdminLogin,
+                            onChanged: (value) => setState(() => _isAdminLogin = value),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your username';
-                            }
-                            return null;
-                          },
+                          const Text('Admin Login'),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      if (!_isAdminLogin) ...[
+                        TextFormField(
+                          controller: _emailController,
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            prefixIcon: const Icon(Icons.email),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          validator: (value) =>
+                          value == null || value.isEmpty ? 'Please enter your email' : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -131,70 +150,72 @@ class _LoginScreenState extends State<LoginScreen> {
                           obscureText: !_passwordVisible,
                           decoration: InputDecoration(
                             labelText: 'Password',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
                             prefixIcon: const Icon(Icons.lock),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _passwordVisible
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
+                                _passwordVisible ? Icons.visibility : Icons.visibility_off,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _passwordVisible = !_passwordVisible;
-                                });
-                              },
+                              onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
                             ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your password';
-                            }
-                            return null;
-                          },
+                          validator: (value) =>
+                          value == null || value.isEmpty ? 'Please enter your password' : null,
                         ),
-                        const SizedBox(height: 16),
                         Row(
                           children: [
                             Checkbox(
                               value: _rememberMe,
-                              onChanged: (value) {
-                                setState(() {
-                                  _rememberMe = value!;
-                                });
-                              },
+                              onChanged: (val) => setState(() => _rememberMe = val!),
                             ),
                             const Text('Remember Me'),
                           ],
                         ),
-                        const SizedBox(height: 24),
-                        _isLoading
-                            ? const CircularProgressIndicator()
-                            : SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: _login,
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: const Text('Login'),
-                                ),
-                              ),
-                        const SizedBox(height: 16),
-                        TextButton(
-                          onPressed: _skipLogin,
-                          child: const Text(
-                            'Continue as Guest',
-                            style: TextStyle(color: Colors.blue),
+                      ] else ...[
+                        TextFormField(
+                          controller: _adminEmailController,
+                          decoration: InputDecoration(
+                            labelText: 'Admin Email',
+                            prefixIcon: const Icon(Icons.admin_panel_settings),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           ),
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Please enter admin email'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _adminPasswordController,
+                          obscureText: !_passwordVisible,
+                          decoration: InputDecoration(
+                            labelText: 'Admin Password',
+                            prefixIcon: const Icon(Icons.lock),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                              ),
+                              onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Please enter admin password'
+                              : null,
                         ),
                       ],
-                    ),
+                      const SizedBox(height: 24),
+                      _isLoading
+                          ? const CircularProgressIndicator()
+                          : ElevatedButton(
+                        onPressed: _login,
+                        child: Text(_isAdminLogin ? 'Login as Admin' : 'Login'),
+                      ),
+                      if (!_isAdminLogin)
+                        TextButton(
+                          onPressed: _navigateToRegister,
+                          child: const Text("Don't have an account? Register"),
+                        ),
+                    ],
                   ),
                 ),
               ),

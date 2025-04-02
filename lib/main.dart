@@ -1,14 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/events_screen.dart';
 import 'screens/event_detail_screen.dart';
 import 'providers/theme_provider.dart';
-import 'models/event_model.dart'; // Add this import
+import 'models/event_model.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+      apiKey: "AIzaSyD8Nbfh07E3J1uU_9q8xUKcaLYZppASXxY",
+      authDomain: "kiit-portal-app.firebaseapp.com",
+      projectId: "kiit-portal-app",
+      storageBucket: "kiit-portal-app.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abc123def456",
+    ),
+  );
+
   runApp(const ProviderScope(child: KIITPortalApp()));
 }
 
@@ -17,9 +31,6 @@ class KIITPortalApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
-    final isDarkMode = themeMode == AppTheme.dark;
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'KIIT Portal',
@@ -33,20 +44,18 @@ class KIITPortalApp extends ConsumerWidget {
         brightness: Brightness.dark,
         useMaterial3: true,
       ),
-      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home:  LoginScreen(),
+      themeMode: ref.watch(themeProvider) == AppTheme.dark ? ThemeMode.dark : ThemeMode.light,
+      home: LoginScreen(),
       routes: {
-        '/home': (context) =>  HomeScreen(),
+        '/home': (context) => HomeScreen(),
         '/settings': (context) => const SettingsScreen(),
-        '/events': (context) =>  EventsScreen(),
+        '/events': (context) => EventsScreen(),
         '/event-detail': (context) {
           final eventArgs = ModalRoute.of(context)!.settings.arguments;
-          
-          // Handle both Event object and Map cases
           if (eventArgs is Event) {
             return EventDetailScreen(event: eventArgs);
           } else if (eventArgs is Map<String, dynamic>) {
-            // Convert map to Event object
+            // Use the manual conversion instead of Event.fromMap
             final event = Event(
               id: eventArgs['id'] ?? '',
               name: eventArgs['name'] ?? '',
@@ -55,7 +64,7 @@ class KIITPortalApp extends ConsumerWidget {
               icon: _parseIcon(eventArgs['icon']),
               color: _parseColor(eventArgs['color']),
               location: eventArgs['location'] ?? '',
-              description: eventArgs['description'] ?? '',
+              description: eventArgs['description'],
             );
             return EventDetailScreen(event: event);
           }
@@ -80,19 +89,11 @@ class KIITPortalApp extends ConsumerWidget {
 
   static IconData _parseIcon(dynamic icon) {
     if (icon is IconData) return icon;
-    if (icon is String) {
-      // Add mapping for string icons if needed
-      return Icons.event;
-    }
     return Icons.event;
   }
 
   static Color _parseColor(dynamic color) {
     if (color is Color) return color;
-    if (color is String) {
-      // Add mapping for string colors if needed
-      return Colors.blue;
-    }
     return Colors.blue;
   }
 }

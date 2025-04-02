@@ -1,4 +1,7 @@
+// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:sap_portal_app/screens/timetable_screen.dart';
+import 'package:sap_portal_app/screens/admin_student_details.dart';
 import 'academic_report.dart';
 import 'attendance_screen.dart';
 import 'events_screen.dart';
@@ -6,33 +9,91 @@ import 'fees_screen.dart';
 import 'qr_code_scanner.dart';
 import 'settings_screen.dart';
 import 'login_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  List<Widget> _screens = [];bool _isAdmin = false;
+  Color _appBarColor = Colors.blue.shade900; // Initial app bar color
 
-  final List<Widget> _screens = [
-    AttendanceScreen(),
-    FeesScreen(),
-    AcademicReportScreen(),
-    EventsScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _checkAdminStatus();
+  }
+
+  Future<void> _checkAdminStatus() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      setState(() {
+        _isAdmin = (userDoc.data()?['role'] == 'admin') ?? false;
+        _screens = _buildScreens();
+      });
+    } else {
+      // Handle case where user is not logged in (shouldn't happen if auth is set up correctly)
+      setState(() {
+        _screens = _buildScreens(); // Build student screens by default
+      });
+    }
+  }
+
+  List<Widget> _buildScreens() {
+    final studentScreens = [
+      AttendanceScreen(),
+      FeesScreen(),
+      AcademicReportScreen(),
+      EventsScreen(),TimeTableScreen(),
+    ];
+    final adminScreens = [...studentScreens, const AdminStudentDetails()];
+    return _isAdmin ? adminScreens : studentScreens;
+  }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      // Update app bar color based on selected index
+      switch (index) {
+        case 0:
+          _appBarColor = Colors.lightBlue.shade900;
+          break;
+        case 1:
+          _appBarColor = Colors.green.shade900;
+          break;
+        case 2:
+          _appBarColor = Colors.orange.shade900;
+          break;
+        case 3:
+          _appBarColor = Colors.red.shade900;
+          break;
+        case 4:
+          _appBarColor = Colors.purple.shade900;
+          break;
+        case 5: // Admin "Students" tab
+          _appBarColor = Colors.blueGrey.shade900;
+          break;
+        default:
+          _appBarColor = Colors.blue.shade900; // Default color
+      }
     });
   }
 
   void _logout(BuildContext context) {
-    // Perform any logout-related tasks here (e.g., clearing tokens, etc.)// Navigate to the login screen and remove all previous routes
+    FirebaseAuth.instance.signOut();
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => LoginScreen()), // Replace LoginScreen() with your actual login screen widget
-          (Route<dynamic> route) => false, // This condition removes all routes from the stack
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+          (Route<dynamic> route) => false,
     );
   }
 
@@ -44,15 +105,15 @@ class _HomeScreenState extends State<HomeScreen> {
           'KIIT Portal',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.blue.shade900,
-        iconTheme: const IconThemeData(color: Colors.white), // Change the drawer icon color here
+        backgroundColor: _appBarColor, // Use the dynamic color
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
             Container(
-              height: 150, // Set the desired height
+              height: 150,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -85,49 +146,49 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.settings, color: Colors.blue.shade900), // Change icon color here
+              leading: Icon(Icons.settings, color: Colors.blue.shade900),
               title: const Text('Settings'),
               onTap: () {
-                Navigator.pop(context); // Close the drawer
+                Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SettingsScreen()), // Navigate to settings
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
                 );
               },
             ),
             ListTile(
-              leading: Icon(Icons.info, color: Colors.blue.shade900), // Change icon color here
+              leading: Icon(Icons.info, color: Colors.blue.shade900),
               title: const Text('Log'),
               onTap: () {
-                Navigator.pop(context); // Close the drawer
+                Navigator.pop(context);
                 // Add navigation to log screen here
               },
             ),
             ListTile(
-              leading: Icon(Icons.help, color: Colors.blue.shade900), // Change icon color here
+              leading: Icon(Icons.help, color: Colors.blue.shade900),
               title: const Text('Help'),
               onTap: () {
-                Navigator.pop(context); // Close the drawer
+                Navigator.pop(context);
                 // Add navigation to help screen here
               },
             ),
             ListTile(
-              leading: Icon(Icons.logout, color: Colors.blue.shade900), // Change icon color here
+              leading: Icon(Icons.logout, color: Colors.blue.shade900),
               title: const Text('Logout'),
               onTap: () {
-                _logout(context); // Call the logout function
+                _logout(context);
               },
             ),
           ],
         ),
       ),
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: Container(
+      body: _screens.isNotEmpty ? _screens[_selectedIndex] : const Center(child: CircularProgressIndicator()),
+      bottomNavigationBar: _screens.isNotEmpty
+          ? Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+            topLeft: Radius.circular(20),topRight: Radius.circular(20),
           ),
           boxShadow: [
             BoxShadow(
@@ -152,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(
               icon: const Icon(Icons.calendar_today),
               label: 'Attendance',
-              backgroundColor: Colors.blue.shade900,
+              backgroundColor: Colors.lightBlue.shade900,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.attach_money),
@@ -167,11 +228,23 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(
               icon: const Icon(Icons.event),
               label: 'Events',
+              backgroundColor: Colors.red.shade900,
+            ),
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.schedule),
+              label: 'Timetable',
               backgroundColor: Colors.purple.shade900,
             ),
+            if (_isAdmin)
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.admin_panel_settings),
+                label: 'Students',
+                backgroundColor: Colors.blueGrey.shade900,
+              ),
           ],
         ),
-      ),
+      )
+          : null,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -180,7 +253,6 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
         child: const Icon(Icons.qr_code),
-      ),
-    );
+      ),);
   }
 }
