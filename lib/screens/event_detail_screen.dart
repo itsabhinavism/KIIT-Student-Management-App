@@ -88,7 +88,7 @@ class EventDetailScreen extends StatelessWidget {
   }
 
   void _shareEvent(BuildContext context) {
-    // Implement share functionality
+ 
   }
 
   void _registerForEvent(BuildContext context) {

@@ -34,7 +34,7 @@ class EventNotifier extends StateNotifier<List<Event>> {
       location: "Seminar Hall",
       description: "Model United Nations conference for students.",
     ),
-    // Add more events as needed
+
   ];
 }
 

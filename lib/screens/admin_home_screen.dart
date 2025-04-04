@@ -5,7 +5,7 @@ import 'admin_fees_screen.dart';
 import 'login_screen.dart';
 import '../providers/theme_provider.dart';
 
-// Add a provider for offline mode if not already defined
+
 final offlineModeProvider = StateProvider<bool>((ref) => false);
 
 class AdminHomeScreen extends ConsumerStatefulWidget {
@@ -31,7 +31,7 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
   }
 
   void _toggleOfflineMode(bool value) {
-    // Show a confirmation dialog if enabling offline mode
+   
     if (value) {
       showDialog(
         context: context,
@@ -52,7 +52,7 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
                   ref.read(offlineModeProvider.notifier).state = true;
                   Navigator.of(context).pop();
 
-                  // Show confirmation snackbar
+                
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Offline mode enabled'),
@@ -66,10 +66,10 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
         },
       );
     } else {
-      // Directly disable offline mode
+    
       ref.read(offlineModeProvider.notifier).state = false;
 
-      // Show confirmation snackbar
+     
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Offline mode disabled'),

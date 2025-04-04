@@ -51,7 +51,7 @@ class AdminFeesScreen extends StatelessWidget {
             crossAxisCount: 2,
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
-            childAspectRatio: 2.2, // lowered aspect ratio to avoid overflow
+            childAspectRatio: 2.2, 
           ),
           itemBuilder: (context, index) {
             final student = students[index];
