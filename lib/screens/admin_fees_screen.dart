@@ -7,18 +7,20 @@ class AdminFeesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final random = Random();
+
     List<Map<String, String>> students = List.generate(50, (index) {
       String rollNumber = '220530${index.toString().padLeft(2, '0')}';
       int totalFees = 225000;
       int feesPaid;
 
       if (index % 10 == 0) {
-        feesPaid = totalFees; // Fully paid
+        feesPaid = totalFees;
       } else if (index % 9 == 0) {
-        feesPaid = 0; // Fully due
+        feesPaid = 0;
       } else {
         feesPaid = random.nextInt(totalFees ~/ 2) + (totalFees ~/ 4);
       }
+
       int feesDue = totalFees - feesPaid;
 
       return {
@@ -30,8 +32,12 @@ class AdminFeesScreen extends StatelessWidget {
     });
 
     return Scaffold(
-      appBar: AppBar(title: Text('Fees Details')),
+      appBar: AppBar(
+        title: const Text('Fees Details'),
+        backgroundColor: Colors.green.shade700,
+      ),
       body: Container(
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -39,32 +45,40 @@ class AdminFeesScreen extends StatelessWidget {
             colors: [Colors.white, Colors.green.shade100],
           ),
         ),
-        padding: const EdgeInsets.all(8.0),
         child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 3,
-          ),
           itemCount: students.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 2.2, // lowered aspect ratio to avoid overflow
+          ),
           itemBuilder: (context, index) {
             final student = students[index];
             return Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Roll No: ${student['rollNumber']}',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text('Semester Fees: ${student['semesterFees']}'),
-                    Text('Fees Paid: ${student['feesPaid']}'),
-                    Text('Fees Due: ${student['feesDue']}'),
+                    Flexible(
+                      child: Text(
+                        '🎓 Roll No: ${student['rollNumber']}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text('💵 Fees: ${student['semesterFees']}', style: const TextStyle(fontSize: 13)),
+                    Text('✅ Paid: ${student['feesPaid']}', style: const TextStyle(fontSize: 13)),
+                    Text('❗ Due: ${student['feesDue']}', style: const TextStyle(fontSize: 13)),
                   ],
                 ),
               ),

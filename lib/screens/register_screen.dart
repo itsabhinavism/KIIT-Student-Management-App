@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
@@ -25,13 +27,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       try {
         // Create user in Firebase Authentication
-        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        UserCredential userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
         );
 
         // Store additional user data in Firestore
-        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({
           'name': _nameController.text,
           'email': _emailController.text,
           'uid': userCredential.user!.uid,
@@ -69,7 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _navigateToLogin() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 
@@ -115,7 +121,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             prefixIcon: const Icon(Icons.person),
                           ),
-                          validator: (value) => value!.isEmpty ? 'Enter Name' : null,
+                          validator: (value) =>
+                              value!.isEmpty ? 'Enter Name' : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -127,7 +134,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             prefixIcon: const Icon(Icons.email),
                           ),
-                          validator: (value) => value!.isEmpty ? 'Enter Email' : null,
+                          validator: (value) =>
+                              value!.isEmpty ? 'Enter Email' : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -140,7 +148,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             prefixIcon: const Icon(Icons.lock),
                             suffixIcon: IconButton(
-                              icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off),
+                              icon: Icon(_passwordVisible
+                                  ? Icons.visibility
+                                  : Icons.visibility_off),
                               onPressed: () {
                                 setState(() {
                                   _passwordVisible = !_passwordVisible;
@@ -148,7 +158,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               },
                             ),
                           ),
-                          validator: (value) => value!.length < 6 ? 'Password must be at least 6 characters' : null,
+                          validator: (value) => value!.length < 6
+                              ? 'Password must be at least 6 characters'
+                              : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -161,24 +173,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             prefixIcon: const Icon(Icons.lock),
                           ),
-                          validator: (value) => value != _passwordController.text ? 'Passwords do not match' : null,
+                          validator: (value) =>
+                              value != _passwordController.text
+                                  ? 'Passwords do not match'
+                                  : null,
                         ),
                         const SizedBox(height: 24),
                         _isLoading
                             ? const CircularProgressIndicator()
                             : SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _register,
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _register,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text('Register'),
+                                ),
                               ),
-                            ),
-                            child: const Text('Register'),
-                          ),
-                        ),
                         const SizedBox(height: 16),
                         TextButton(
                           onPressed: _navigateToLogin,

@@ -43,11 +43,11 @@ class EventDetailScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
                 const SizedBox(width: 8),
                 Text(event.formattedDate),
                 const SizedBox(width: 16),
-                Icon(Icons.location_on, size: 16, color: Colors.grey),
+                const Icon(Icons.location_on, size: 16, color: Colors.grey),
                 const SizedBox(width: 8),
                 Text(event.location),
               ],

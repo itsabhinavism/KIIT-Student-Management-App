@@ -52,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
             _adminPasswordController.text.trim() == 'kiit123') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => AdminHomeScreen()),
+            MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
           );
         } else {
           throw Exception('Invalid admin credentials');
@@ -75,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => RegisterScreen()),
+          MaterialPageRoute(builder: (_) => HomeScreen()),
         );
       }
     } catch (e) {
@@ -92,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _navigateToRegister() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => RegisterScreen()),
+      MaterialPageRoute(builder: (_) => const RegisterScreen()),
     );
   }
 
@@ -180,9 +180,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             prefixIcon: const Icon(Icons.admin_panel_settings),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Please enter admin email'
-                              : null,
+                          validator: (value) =>
+                          value == null || value.isEmpty ? 'Please enter admin email' : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(

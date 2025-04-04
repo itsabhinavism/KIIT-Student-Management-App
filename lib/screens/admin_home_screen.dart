@@ -8,8 +8,8 @@ class AdminHomeScreen extends StatelessWidget {
 
   void _logout(BuildContext context) {
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-          (Route<dynamic> route) => false,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (Route<dynamic> route) => false,
     );
   }
 
@@ -23,17 +23,19 @@ class AdminHomeScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // Center content vertically
+          mainAxisAlignment:
+              MainAxisAlignment.center, // Center content vertically
           children: [
             _buildDashboardItem(
               context,
               "Attendance Details",
               Icons.calendar_today,
               Colors.blue.shade700,
-                  () {
+              () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AdminAttendanceScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => AdminAttendanceScreen()),
                 );
               },
               height: 150, // Increased height
@@ -44,10 +46,11 @@ class AdminHomeScreen extends StatelessWidget {
               "Fees Details",
               Icons.attach_money,
               Colors.green.shade700,
-                  () {
+              () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AdminFeesScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const AdminFeesScreen()),
                 );
               },
               height: 150, // Increased height
@@ -55,11 +58,15 @@ class AdminHomeScreen extends StatelessWidget {
             const SizedBox(height: 40), // Added space before Logout
             ElevatedButton.icon(
               onPressed: () => _logout(context),
-              icon: const Icon(Icons.logout, color: Colors.white), // Set icon color to white
-              label: const Text("Logout", style: TextStyle(color: Colors.white)),// Set text color to white
+              icon: const Icon(Icons.logout,
+                  color: Colors.white), // Set icon color to white
+              label: const Text("Logout",
+                  style: TextStyle(
+                      color: Colors.white)), // Set text color to white
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade700,// Logout button color
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                backgroundColor: Colors.red.shade700, // Logout button color
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 textStyle: const TextStyle(fontSize: 16),
               ),
             ),
@@ -70,14 +77,15 @@ class AdminHomeScreen extends StatelessWidget {
   }
 
   Widget _buildDashboardItem(
-      BuildContext context,
-      String title,
-      IconData icon,
-      Color color,
-      VoidCallback onTap, {
-        double height = 120, // Default height
-      }) {
-    return SizedBox(  // Use SizedBox to control the height
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap, {
+    double height = 120, // Default height
+  }) {
+    return SizedBox(
+      // Use SizedBox to control the height
       height: height,
       width: double.infinity, // Make the card take full width
       child: Card(
@@ -95,7 +103,9 @@ class AdminHomeScreen extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold), // Increased text size
+                  style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold), // Increased text size
                   textAlign: TextAlign.center,
                 ),
               ],

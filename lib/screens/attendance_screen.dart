@@ -10,6 +10,7 @@ class AttendanceScreen extends StatelessWidget {
     'attendedClasses': 85,
     'attendancePercentage': 85.0,
   };
+
   final List<Map<String, dynamic>> subjects = [
     {
       'name': 'Data Structures',
@@ -42,13 +43,16 @@ class AttendanceScreen extends StatelessWidget {
       'color': Colors.deepOrange,
     },
   ];
+
+  // Removed const here
+  AttendanceScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final isDarkMode = brightness == Brightness.dark;
     final percentage = student['attendancePercentage'] as double;
 
-    // Dark mode aware colors
     final attendanceColor = percentage >= 75
         ? isDarkMode
         ? Colors.green[400]!
@@ -62,9 +66,8 @@ class AttendanceScreen extends StatelessWidget {
         : Colors.red[700]!;
 
     final cardColor = isDarkMode ? Colors.grey[900] : Colors.white;
-    final profileCardColor = isDarkMode
-        ? Colors.deepPurple[900]
-        : Colors.deepPurple[50];
+    final profileCardColor =
+    isDarkMode ? Colors.deepPurple[900] : Colors.deepPurple[50];
     final summaryCardColor =
     isDarkMode ? Colors.blueGrey[900] : Colors.blue[50];
     final subjectCardColor = isDarkMode ? Colors.grey[850] : Colors.grey[50];
@@ -76,10 +79,10 @@ class AttendanceScreen extends StatelessWidget {
         title: const Text('My Attendance'),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.blue[800], // Dark Blue Appbar
+        backgroundColor: Colors.blue[800],
         foregroundColor: Colors.white,
       ),
-      backgroundColor: Colors.blue[100], // light Dark Blue Background
+      backgroundColor: Colors.blue[100],
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -122,10 +125,12 @@ class AttendanceScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       student['name'],
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style:
+                      Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color:
-                        isDarkMode ? Colors.white : Colors.deepPurple[900],
+                        color: isDarkMode
+                            ? Colors.white
+                            : Colors.deepPurple[900],
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -172,7 +177,8 @@ class AttendanceScreen extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.assessment,
-                          color: isDarkMode ? Colors.blue[200] : Colors.blue[800],
+                          color:
+                          isDarkMode ? Colors.blue[200] : Colors.blue[800],
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -180,8 +186,9 @@ class AttendanceScreen extends StatelessWidget {
                           style:
                           Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color:
-                            isDarkMode ? Colors.white : Colors.blue[900],
+                            color: isDarkMode
+                                ? Colors.white
+                                : Colors.blue[900],
                           ),
                         ),
                       ],
@@ -242,8 +249,10 @@ class AttendanceScreen extends StatelessWidget {
                           ),
                           child: Text(
                             '${percentage.toStringAsFixed(1)} %',
-                            style:
-                            Theme.of(context).textTheme.titleLarge?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: attendanceColor,
                             ),
@@ -306,7 +315,8 @@ class AttendanceScreen extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.menu_book,
-                          color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
+                          color:
+                          isDarkMode ? Colors.grey[300] : Colors.grey[800],
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -323,7 +333,8 @@ class AttendanceScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     ...subjects.map((subject) {
-                      final percent = (subject['attended'] / subject['total']) * 100;
+                      final percent =
+                          (subject['attended'] / subject['total']) * 100;
                       final color = subject['color'] as Color;
                       final percentColor = percent >= 75
                           ? isDarkMode
@@ -350,8 +361,8 @@ class AttendanceScreen extends StatelessWidget {
                                     Container(
                                       padding: const EdgeInsets.all(4),
                                       decoration: BoxDecoration(
-                                        color:
-                                        color.withOpacity(isDarkMode ? 0.3 : 0.2),
+                                        color: color.withOpacity(
+                                            isDarkMode ? 0.3 : 0.2),
                                         shape: BoxShape.circle,
                                       ),
                                       child: Icon(
@@ -416,7 +427,7 @@ class AttendanceScreen extends StatelessWidget {
                           ],
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),

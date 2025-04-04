@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class AcademicReportScreen extends StatefulWidget {
+  const AcademicReportScreen({super.key});
+
   @override
   _AcademicReportScreenState createState() => _AcademicReportScreenState();
 }
@@ -90,7 +92,8 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
             return ListTile(
               title: Text(
                 'Semester $semester',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             );
           },
