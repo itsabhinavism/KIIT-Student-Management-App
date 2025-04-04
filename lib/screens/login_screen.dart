@@ -248,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         child: Text(_isAdminLogin ? 'Login as Admin' : 'Login'),
-                      ),
+                      ),SizedBox(height: 10),
                       if (!_isAdminLogin)
                         TextButton(
                           onPressed: _navigateToRegister,
