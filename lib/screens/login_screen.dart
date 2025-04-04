@@ -41,6 +41,11 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  // Function to validate if email has the kiit.ac.in domain
+  bool _isValidKiitEmail(String email) {
+    return email.toLowerCase().endsWith('@kiit.ac.in');
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -61,6 +66,11 @@ class _LoginScreenState extends State<LoginScreen> {
         final email = _emailController.text.trim();
         final password = _passwordController.text.trim();
 
+        // Check if the email is from KIIT domain
+        if (!_isValidKiitEmail(email)) {
+          throw Exception('Only for Lovable KIITIANS');
+        }
+
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email,
           password: password,
@@ -75,13 +85,24 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => HomeScreen()),
+          MaterialPageRoute(builder: (_) =>  HomeScreen()),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      String errorMessage = e.toString();
+      // Show a more user-friendly message
+      if (errorMessage.contains('Only for Lovable KIITIANS')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Only for Lovable KIITIANS'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -121,10 +142,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Image.asset(
-                          'assets/KIIT.png',
-                          width: 80,
-                          height: 80,
-                        ),
+                        'assets/KIIT.png',
+                        width: 80,
+                        height: 80,
+                      ),
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -145,9 +166,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             labelText: 'Email',
                             prefixIcon: const Icon(Icons.email),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            helperText: 'Use KIIT email (example@kiit.ac.in)',
                           ),
-                          validator: (value) =>
-                          value == null || value.isEmpty ? 'Please enter your email' : null,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter your email';
+                            }
+                            if (!_isValidKiitEmail(value)) {
+                              return 'Please use your KIIT email address';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -212,6 +241,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? const CircularProgressIndicator()
                           : ElevatedButton(
                         onPressed: _login,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 45),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
                         child: Text(_isAdminLogin ? 'Login as Admin' : 'Login'),
                       ),
                       if (!_isAdminLogin)

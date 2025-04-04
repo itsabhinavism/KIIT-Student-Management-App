@@ -390,20 +390,94 @@ class _EventSearchDelegate extends SearchDelegate {
   );
 
   @override
-  Widget buildResults(BuildContext context) => _buildSearchResults();
+  Widget buildResults(BuildContext context) => _buildSearchResults(context);
 
   @override
-  Widget buildSuggestions(BuildContext context) => _buildSearchResults();
+  Widget buildSuggestions(BuildContext context) => _buildSearchResults(context);
 
-  Widget _buildSearchResults() {
+  Widget _buildSearchResults(BuildContext context) {
     final results = events
-        .where((e) => e['name'].toLowerCase().contains(query.toLowerCase()))
+        .where((e) => 
+            e['name'].toLowerCase().contains(query.toLowerCase()) ||
+            e['category'].toLowerCase().contains(query.toLowerCase()))
         .toList();
+        
     return ListView.builder(
+      padding: const EdgeInsets.all(16),
       itemCount: results.length,
-      itemBuilder: (context, index) => ListTile(
-        title: Text(results[index]['name']),
-      ),
+      itemBuilder: (context, index) {
+        final event = results[index];
+        return Card(
+          elevation: 3,
+          margin: const EdgeInsets.only(bottom: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              // Close search and navigate to event detail
+              close(context, null);
+              Navigator.pushNamed(
+                context,
+                '/event-detail',
+                arguments: event,
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: event['color'].withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      event['icon'],
+                      color: event['color'],
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          event['name'],
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${event['date']} • ${event['location']}',
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Chip(
+                          label: Text(event['category']),
+                          backgroundColor: event['color'].withOpacity(0.1),
+                          labelStyle: TextStyle(color: event['color']),
+                          padding: EdgeInsets.zero,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
