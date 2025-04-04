@@ -34,8 +34,8 @@ dependencies:
   provider: ^6.0.0         # For state management
   shared_preferences: ^2.0.6 # For local storage
   qr_code_scanner: ^1.0.1  # For QR code scanning
-  flutter_html: ^2.2.1    # For rendering HTML content
-  webview_flutter: ^2.0.4  # For embedding web pages
+  flutter_html: ^3.0.0    # For rendering HTML content
+  #webview_flutter: ^2.0.4  # For embedding web pages
   flutter_riverpod: ^2.4.9
   intl: ^0.18.1
   firebase_auth_web: ^5.9.3 # Upgraded to latest
@@ -44,7 +44,7 @@ dependencies:
   firebase_core: ^2.18.0
   firebase_database: ^10.5.7  # Compatible version
   percent_indicator: ^4.2.3
-
+  webview_flutter: ^4.4.2
 
 
 
