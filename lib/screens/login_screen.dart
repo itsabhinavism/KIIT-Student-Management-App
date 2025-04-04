@@ -120,7 +120,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.school, size: 80, color: Colors.blue),
+                      Image.asset(
+                          'assets/KIIT.png',
+                          width: 80,
+                          height: 80,
+                        ),
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,

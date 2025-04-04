@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class AttendanceScreen extends StatelessWidget {
   final Map<String, dynamic> student = {
-    'name': 'Abhinav Sharma',
-    'rollNumber': 22053001,
+    'name': 'Abhinav Anand',
+    'rollNumber': 22052611,
     'department': 'Computer Science',
     'semester': '5th',
     'totalClasses': 100,

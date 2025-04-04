@@ -24,7 +24,6 @@ class _TimeTableScreenState extends State<TimeTableScreen> {
       "FRI: ML (C-LH-203), AP (C-WL-103), AP(L) (C-WL-103)",
       "SAT: ML (C-LH-403), CC|SPM (C-LH-403), DSA (C-LH-403)"
     ],
-    // Add other sections following the same pattern
   };
 
   List<String> _displayedTimetable = [];
@@ -36,14 +35,32 @@ class _TimeTableScreenState extends State<TimeTableScreen> {
     });
   }
 
+  Color _getBackgroundColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Colors.grey.shade900
+        : Colors.deepPurple.shade50;
+  }
+
+  Color _getCardColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Colors.grey.shade800
+        : Colors.deepPurple.shade100;
+  }
+
+  Color _getPrimaryColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Colors.deepPurple.shade200
+        : Colors.deepPurple.shade300;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Academic Schedule"),
-        backgroundColor: Colors.deepPurple.shade300, // Slightly lighter purple
+        backgroundColor: _getPrimaryColor(context),
       ),
-      backgroundColor: Colors.deepPurple.shade50, // Very light purple background
+      backgroundColor: _getBackgroundColor(context),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -54,46 +71,74 @@ class _TimeTableScreenState extends State<TimeTableScreen> {
               decoration: InputDecoration(
                 labelText: "Enter Section (e.g., CSE-1, IT-1)",
                 border: const OutlineInputBorder(),
-                suffixIcon: Icon(Icons.search, color: Colors.deepPurple.shade300),
+                suffixIcon: Icon(Icons.search, color: _getPrimaryColor(context)),
+                labelStyle: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white70
+                      : Colors.black87,
+                ),
               ),
-              style: const TextStyle(fontSize: 16),
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black,
+              ),
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
               icon: Icon(Icons.schedule, color: Colors.white),
-              label: const Text("View Timetable", style: TextStyle(fontSize: 16, color: Colors.white)), // Explicitly set text color to white
+              label: const Text("View Timetable", 
+                     style: TextStyle(fontSize: 16, color: Colors.white)),
               onPressed: _fetchTimetable,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple.shade300,
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                backgroundColor: _getPrimaryColor(context),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 30, vertical: 15),
               ),
             ),
             const SizedBox(height: 25),
             Expanded(
               child: ListView.separated(
                 itemCount: _displayedTimetable.length,
-                separatorBuilder: (context, index) => const Divider(height: 1),
+                separatorBuilder: (context, index) => Divider(
+                  height: 1,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white24
+                      : Colors.black12,
+                ),
                 itemBuilder: (context, index) {
-                  return _ScheduleCard(entry: _displayedTimetable[index]);
+                  return _ScheduleCard(
+                    entry: _displayedTimetable[index],
+                    cardColor: _getCardColor(context),
+                    iconColor: _getPrimaryColor(context),
+                  );
                 },
               ),
             ),
           ],
-        ),),
+        ),
+      ),
     );
   }
 }
 
 class _ScheduleCard extends StatelessWidget {
   final String entry;
+  final Color cardColor;
+  final Color iconColor;
 
-  const _ScheduleCard({required this.entry});
+  const _ScheduleCard({
+    required this.entry,
+    required this.cardColor,
+    required this.iconColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 3,
-      color: Colors.deepPurple.shade100, // Light purple for schedule cards
+      color: cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -101,15 +146,21 @@ class _ScheduleCard extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            Icon(Icons.calendar_today, color: Colors.deepPurple.shade300, size: 22),
+            Icon(Icons.calendar_today, color: iconColor, size: 22),
             const SizedBox(width: 15),
             Expanded(
               child: Text(
                 entry,
                 style: TextStyle(
                   fontSize: 16,
-                  color: entry == "No classes" ? Colors.grey : Colors.black,
-                  fontStyle: entry == "No classes" ? FontStyle.italic : FontStyle.normal,
+                  color: entry == "No classes" 
+                      ? Colors.grey 
+                      : Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
+                  fontStyle: entry == "No classes" 
+                      ? FontStyle.italic 
+                      : FontStyle.normal,
                 ),
               ),
             ),

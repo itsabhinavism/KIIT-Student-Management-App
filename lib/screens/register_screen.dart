@@ -26,14 +26,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
 
       try {
-        // Create user in Firebase Authentication
         UserCredential userCredential =
             await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
         );
 
-        // Store additional user data in Firestore
         await FirebaseFirestore.instance
             .collection('users')
             .doc(userCredential.user!.uid)
@@ -106,10 +104,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          Icons.app_registration,
-                          size: 80,
-                          color: Colors.blue,
+                        Image.asset(
+                          'assets/KIIT.png',
+                          width: 80,
+                          height: 80,
                         ),
                         const SizedBox(height: 24),
                         TextFormField(

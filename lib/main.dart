@@ -4,7 +4,6 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'screens/login_screen.dart';
 import 'screens/admin_home_screen.dart'; // Fixed import
-import 'screens/settings_screen.dart';
 import 'screens/events_screen.dart';
 import 'screens/event_detail_screen.dart';
 import 'providers/theme_provider.dart';
@@ -49,7 +48,6 @@ class KIITPortalApp extends ConsumerWidget {
       home: LoginScreen(),
       routes: {
         '/home': (context) => AdminHomeScreen(),
-        '/settings': (context) => const SettingsScreen(),
         '/events': (context) => EventsScreen(),
         '/event-detail': (context) {
           final eventArgs = ModalRoute.of(context)!.settings.arguments;
