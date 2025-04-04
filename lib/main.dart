@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 import 'screens/login_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/admin_home_screen.dart'; // Fixed import
 import 'screens/settings_screen.dart';
 import 'screens/events_screen.dart';
 import 'screens/event_detail_screen.dart';
@@ -47,7 +48,7 @@ class KIITPortalApp extends ConsumerWidget {
       themeMode: ref.watch(themeProvider) == AppTheme.dark ? ThemeMode.dark : ThemeMode.light,
       home: LoginScreen(),
       routes: {
-        '/home': (context) => HomeScreen(),
+        '/home': (context) => AdminHomeScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/events': (context) => EventsScreen(),
         '/event-detail': (context) {
@@ -55,7 +56,7 @@ class KIITPortalApp extends ConsumerWidget {
           if (eventArgs is Event) {
             return EventDetailScreen(event: eventArgs);
           } else if (eventArgs is Map<String, dynamic>) {
-            // Use the manual conversion instead of Event.fromMap
+            // Convert manually in case the type is map
             final event = Event(
               id: eventArgs['id'] ?? '',
               name: eventArgs['name'] ?? '',

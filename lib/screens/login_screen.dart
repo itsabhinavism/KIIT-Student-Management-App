@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'home_screen.dart';
-import 'register_screen.dart';
-import 'admin_student_details.dart';
+
+import 'home_screen.dart'; // Student Home
+import 'register_screen.dart'; // Registration screen
+import 'admin_home_screen.dart'; // Admin Home
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -47,11 +48,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       if (_isAdminLogin) {
-        if (_adminEmailController.text == 'admin@gmail.com' &&
-            _adminPasswordController.text == 'kiit123') {
+        if (_adminEmailController.text.trim() == 'admin@gmail.com' &&
+            _adminPasswordController.text.trim() == 'kiit123') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => AdminStudentDetails()),
+            MaterialPageRoute(builder: (_) => AdminHomeScreen()),
           );
         } else {
           throw Exception('Invalid admin credentials');
@@ -74,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => RegisterScreen()),
         );
       }
     } catch (e) {
@@ -91,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _navigateToRegister() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const AdminStudentDetails()),
+      MaterialPageRoute(builder: (_) => RegisterScreen()),
     );
   }
 
