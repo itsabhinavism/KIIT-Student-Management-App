@@ -54,7 +54,7 @@ class KIITPortalApp extends ConsumerWidget {
           if (eventArgs is Event) {
             return EventDetailScreen(event: eventArgs);
           } else if (eventArgs is Map<String, dynamic>) {
-            // Convert manually in case the type is map
+            
             final event = Event(
               id: eventArgs['id'] ?? '',
               name: eventArgs['name'] ?? '',

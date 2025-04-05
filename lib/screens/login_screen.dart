@@ -195,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           validator: (value) =>
                           value == null || value.isEmpty ? 'Please enter your password' : null,
-                        ),
+                        ),const SizedBox(height: 12),
                         Row(
                           children: [
                             Checkbox(
@@ -216,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           validator: (value) =>
                           value == null || value.isEmpty ? 'Please enter admin email' : null,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         TextFormField(
                           controller: _adminPasswordController,
                           obscureText: !_passwordVisible,
@@ -236,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               : null,
                         ),
                       ],
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 14),
                       _isLoading
                           ? const CircularProgressIndicator()
                           : ElevatedButton(
