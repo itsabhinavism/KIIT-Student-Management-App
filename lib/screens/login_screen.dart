@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'home_screen.dart'; // Student Home
-import 'register_screen.dart'; // Registration screen
-import 'admin_home_screen.dart'; // Admin Home
+import 'home_screen.dart';
+import 'register_screen.dart';
+import 'admin_home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -28,36 +28,69 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _loadRememberMe();
+    _checkLoginState();
   }
 
-  Future<void> _loadRememberMe() async {
+  // Updated login persistence in login_screen.dart
+  Future<void> _checkLoginState() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _rememberMe = prefs.getBool('rememberMe') ?? false;
-      if (_rememberMe) {
-        _emailController.text = prefs.getString('email') ?? '';
+    final remember = prefs.getBool('rememberMe') ?? false;
+    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    final isAdmin = prefs.getBool('isAdmin') ?? false;
+
+    if (remember && isLoggedIn) {
+      if (isAdmin) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
+        );
+      } else {
+        final email = prefs.getString('email') ?? '';
+        final rollNumber = email.split('@')[0];
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => HomeScreen(rollNumber: rollNumber)),
+        );
       }
-    });
+    } else {
+      setState(() {
+        _rememberMe = remember;
+        if (_rememberMe) {
+          _emailController.text = prefs.getString('email') ?? '';
+        }
+      });
+    }
   }
 
-  // Function to validate if email has the kiit.ac.in domain
+
   bool _isValidKiitEmail(String email) {
     return email.toLowerCase().endsWith('@kiit.ac.in');
   }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+
       if (_isAdminLogin) {
-        if (_adminEmailController.text.trim() == 'admin@gmail.com' &&
-            _adminPasswordController.text.trim() == 'kiit123') {
-          Navigator.pushReplacement(
+        final adminEmail = _adminEmailController.text.trim();
+        final adminPassword = _adminPasswordController.text.trim();
+
+        if (adminEmail == 'admin@gmail.com' && adminPassword == 'kiit123') {
+          if (_rememberMe) {
+            await prefs.setBool('rememberMe', true);
+            await prefs.setBool('isLoggedIn', true);
+            await prefs.setBool('isAdmin', true);
+          } else {
+            await prefs.clear();
+          }
+
+          Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
+                (route) => false,
           );
         } else {
           throw Exception('Invalid admin credentials');
@@ -66,7 +99,6 @@ class _LoginScreenState extends State<LoginScreen> {
         final email = _emailController.text.trim();
         final password = _passwordController.text.trim();
 
-        // Check if the email is from KIIT domain
         if (!_isValidKiitEmail(email)) {
           throw Exception('Only for Lovable KIITIANS');
         }
@@ -77,36 +109,35 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (_rememberMe) {
-          final prefs = await SharedPreferences.getInstance();
           await prefs.setString('email', email);
-          await prefs.setBool('rememberMe', _rememberMe);
+          await prefs.setBool('rememberMe', true);
           await prefs.setBool('isLoggedIn', true);
+          await prefs.setBool('isAdmin', false);
+        } else {
+          await prefs.clear();
         }
 
-        Navigator.pushReplacement(
+        final rollNumber = email.split('@')[0];
+
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) =>  HomeScreen()),
+          MaterialPageRoute(builder: (_) => HomeScreen(rollNumber: rollNumber)),
+              (route) => false,
         );
       }
     } catch (e) {
-      String errorMessage = e.toString();
-      // Show a more user-friendly message
-      if (errorMessage.contains('Only for Lovable KIITIANS')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Only for Lovable KIITIANS'),
-            backgroundColor: Colors.red,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().contains('Lovable KIITIANS')
+                ? 'Only for Lovable KIITIANS'
+                : 'Login failed: ${e.toString().replaceAll('Exception:', '').trim()}',
           ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
-      }
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -141,11 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Image.asset(
-                        'assets/KIIT.png',
-                        width: 80,
-                        height: 80,
-                      ),
+                      Image.asset('assets/KIIT.png', width: 80, height: 80),
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -153,28 +180,25 @@ class _LoginScreenState extends State<LoginScreen> {
                           const Text('Student Login'),
                           Switch(
                             value: _isAdminLogin,
-                            onChanged: (value) => setState(() => _isAdminLogin = value),
+                            onChanged: (val) => setState(() => _isAdminLogin = val),
                           ),
                           const Text('Admin Login'),
                         ],
                       ),
                       const SizedBox(height: 24),
+
                       if (!_isAdminLogin) ...[
                         TextFormField(
                           controller: _emailController,
                           decoration: InputDecoration(
-                            labelText: 'Email',
+                            labelText: 'KIIT Email',
                             prefixIcon: const Icon(Icons.email),
+                            helperText: 'Use your @kiit.ac.in email',
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            helperText: 'Use KIIT email (example@kiit.ac.in)',
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your email';
-                            }
-                            if (!_isValidKiitEmail(value)) {
-                              return 'Please use your KIIT email address';
-                            }
+                          validator: (val) {
+                            if (val == null || val.isEmpty) return 'Please enter your email';
+                            if (!_isValidKiitEmail(val)) return 'Invalid KIIT email';
                             return null;
                           },
                         ),
@@ -186,16 +210,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             labelText: 'Password',
                             prefixIcon: const Icon(Icons.lock),
                             suffixIcon: IconButton(
-                              icon: Icon(
-                                _passwordVisible ? Icons.visibility : Icons.visibility_off,
-                              ),
+                              icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off),
                               onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
                             ),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          validator: (value) =>
-                          value == null || value.isEmpty ? 'Please enter your password' : null,
-                        ),const SizedBox(height: 12),
+                          validator: (val) =>
+                          val == null || val.isEmpty ? 'Please enter your password' : null,
+                        ),
+                        const SizedBox(height: 12),
                         Row(
                           children: [
                             Checkbox(
@@ -205,7 +228,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             const Text('Remember Me'),
                           ],
                         ),
-                      ] else ...[
+                      ],
+
+                      if (_isAdminLogin) ...[
                         TextFormField(
                           controller: _adminEmailController,
                           decoration: InputDecoration(
@@ -213,8 +238,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             prefixIcon: const Icon(Icons.admin_panel_settings),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          validator: (value) =>
-                          value == null || value.isEmpty ? 'Please enter admin email' : null,
+                          validator: (val) =>
+                          val == null || val.isEmpty ? 'Enter admin email' : null,
                         ),
                         const SizedBox(height: 12),
                         TextFormField(
@@ -224,31 +249,30 @@ class _LoginScreenState extends State<LoginScreen> {
                             labelText: 'Admin Password',
                             prefixIcon: const Icon(Icons.lock),
                             suffixIcon: IconButton(
-                              icon: Icon(
-                                _passwordVisible ? Icons.visibility : Icons.visibility_off,
-                              ),
+                              icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off),
                               onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
                             ),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Please enter admin password'
-                              : null,
+                          validator: (val) =>
+                          val == null || val.isEmpty ? 'Enter admin password' : null,
                         ),
                       ],
-                      const SizedBox(height: 14),
+
+                      const SizedBox(height: 18),
                       _isLoading
                           ? const CircularProgressIndicator()
                           : ElevatedButton(
                         onPressed: _login,
                         style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 45),
+                          minimumSize: const Size(double.infinity, 48),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                         child: Text(_isAdminLogin ? 'Login as Admin' : 'Login'),
-                      ),SizedBox(height: 10),
+                      ),
+                      const SizedBox(height: 12),
                       if (!_isAdminLogin)
                         TextButton(
                           onPressed: _navigateToRegister,

@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'academic_report.dart';
 import 'attendance_screen.dart';
 import 'events_screen.dart';
@@ -8,10 +11,13 @@ import 'login_screen.dart';
 import 'timetable_screen.dart';
 import '../providers/theme_provider.dart';
 
-// Add a provider for offline mode
 final offlineModeProvider = StateProvider<bool>((ref) => false);
 
 class HomeScreen extends ConsumerStatefulWidget {
+  final String rollNumber;
+
+  const HomeScreen({super.key, required this.rollNumber});
+
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
@@ -19,11 +25,22 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = [
-    AttendanceScreen(),
-    FeesScreen(),
-    AcademicReportScreen(),
-    EventsScreen(),
+  final Map<String, String> _profileMap = {
+    '22051624': 'assets/shreemant.jpg',
+    '2205896': 'assets/KIIT.png',
+    '22052611': 'assets/abhinav.jpg',
+    '22053018': 'assets/shashwat.jpg',
+  };
+
+  String studentName = 'Loading...';
+  String studentRollNumber = '';
+  String? profileImageAsset;
+
+  late final List<Widget> _screens = [
+    AttendanceScreen(rollNumber: widget.rollNumber),
+    FeesScreen(rollNumber: widget.rollNumber),
+    const AcademicReportScreen(),
+    EventsScreen(rollNumber: widget.rollNumber),
     TimeTableScreen(),
   ];
 
@@ -35,110 +52,136 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     Colors.purple.shade900,
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    fetchStudentData();
+  }
+
+  Future<void> fetchStudentData() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('students')
+          .doc(widget.rollNumber)
+          .get();
+
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        if (!mounted) return;
+        setState(() {
+          studentName = data['name'] ?? 'No Name';
+          studentRollNumber = data['rollNumber'] ?? widget.rollNumber;
+          profileImageAsset = _profileMap[widget.rollNumber];
+        });
+      } else {
+        if (!mounted) return;
+        setState(() {
+          studentName = 'Student Not Found';
+          studentRollNumber = widget.rollNumber;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        studentName = 'Error fetching data';
+        studentRollNumber = widget.rollNumber;
+      });
+    }
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
 
-  void _logout(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-      (Route<dynamic> route) => false,
+  // Updated logout function in home_screen.dart
+  void _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', false);  // Critical logout flag update
+    await prefs.setBool('isAdmin', false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Logged out successfully'),
+        duration: Duration(seconds: 1),
+      ),
     );
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false,
+      );
+    });
   }
+
 
   void _showAboutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('About KIIT Student Management App'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'KIIT Student Management App',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text('Version: 1.0.0'),
-                const SizedBox(height: 20),
-                SelectableText(
-                  'A Mini Project made by Abhinav Anand, Debsoomonto Sen, Shashwat Sinha and Shreemant Sahu '
-                  'under the guidance of Ms. Namita Panda. The KIIT Portal Mobile App aims to transform the '
-                  'existing SAP portal into a user-friendly mobile application for students and faculty. '
-                  'By integrating academic, administrative, and financial functionalities into a single platform, '
-                  'the app streamlines daily workflows, enhances accessibility, and improves engagement across '
-                  'the university community.',
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
-                ),
-              ],
-            ),
+      builder: (_) => AlertDialog(
+        title: const Text('About KIIT Student Management App'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                'KIIT Student Management App',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              SizedBox(height: 12),
+              Text('Version: 1.0.0'),
+              SizedBox(height: 20),
+              SelectableText(
+                'A Mini Project made by Abhinav Anand, Debsoomonto Sen, '
+                    'Shashwat Sinha and Shreemant Sahu under the guidance of Ms. Namita Panda. '
+                    'The KIIT Portal Mobile App aims to transform the existing SAP portal into a '
+                    'user-friendly mobile application for students and faculty.',
+              ),
+            ],
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Close'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Close'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
     );
   }
 
   void _toggleOfflineMode(bool value) {
-    // Show a confirmation dialog if enabling offline mode
     if (value) {
       showDialog(
         context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Enable Offline Mode?'),
-            content: const Text(
-              'In offline mode, the app will use locally cached data. Some features may be limited or unavailable.',
+        builder: (_) => AlertDialog(
+          title: const Text('Enable Offline Mode?'),
+          content: const Text(
+              'In offline mode, the app will use locally cached data. Some features may be limited or unavailable.'),
+          actions: [
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
             ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Cancel'),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              TextButton(
-                child: const Text('Enable'),
-                onPressed: () {
-                  ref.read(offlineModeProvider.notifier).state = true;
-                  Navigator.of(context).pop();
-                  
-                  // Show confirmation snackbar
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Offline mode enabled'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
-            ],
-          );
-        },
+            TextButton(
+              child: const Text('Enable'),
+              onPressed: () {
+                ref.read(offlineModeProvider.notifier).state = true;
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Offline mode enabled')),
+                );
+              },
+            ),
+          ],
+        ),
       );
     } else {
-      // Directly disable offline mode
       ref.read(offlineModeProvider.notifier).state = false;
-      
-      // Show confirmation snackbar
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Offline mode disabled'),
-          duration: Duration(seconds: 2),
-        ),
+        const SnackBar(content: Text('Offline mode disabled')),
       );
     }
   }
@@ -150,63 +193,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'KIIT Portal',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('KIIT Portal', style: TextStyle(color: Colors.white)),
         backgroundColor: _appBarColors[_selectedIndex],
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          //if (isOfflineMode)
-            Padding(
-              padding: EdgeInsets.only(right: 16.0),
-              child: Image.asset(
-                          'assets/KIIT.png',
-                          width: 40,
-                          height: 40,
-                        ),
-            ),
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Image.asset('assets/KIIT.png', width: 40, height: 40),
+          ),
         ],
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
-          children: <Widget>[
+          children: [
             DrawerHeader(
-              decoration: BoxDecoration(
-                color: _appBarColors[_selectedIndex],
-              ),
+              decoration: BoxDecoration(color: _appBarColors[_selectedIndex]),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  CircleAvatar(
-                    radius: 30,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  profileImageAsset != null
+                      ? CircleAvatar(
+                    radius: 35,
+                    backgroundImage: AssetImage(profileImageAsset!),
                     backgroundColor: Colors.white,
-                    child: Icon(
-                      Icons.person,
-                      size: 40,
-                      color: Colors.grey,
-                    ),
+                  )
+                      : const CircleAvatar(
+                    radius: 35,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.school, size: 35, color: Colors.black),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
-                    'Abhinav Anand',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                    ),
-                  ),
-                  Text(
-                    'Roll Number: 22052611',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    'Roll Number: $studentRollNumber',
+                    style: const TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                 ],
               ),
             ),
-            // Offline Mode Toggle
             ListTile(
               leading: Icon(
                 isOfflineMode ? Icons.offline_bolt : Icons.offline_pin_outlined,
@@ -219,7 +243,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onChanged: _toggleOfflineMode,
               ),
             ),
-            // Dark Mode Toggle
             ListTile(
               leading: Icon(
                 isDarkMode ? Icons.light_mode : Icons.dark_mode,
@@ -229,17 +252,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               trailing: Switch(
                 value: isDarkMode,
                 activeColor: _appBarColors[_selectedIndex],
-                onChanged: (value) {
-                  ref.read(themeProvider.notifier).toggleTheme();
-                },
+                onChanged: (_) => ref.read(themeProvider.notifier).toggleTheme(),
               ),
             ),
-            // About Section
             ListTile(
-              leading: Icon(
-                Icons.info,
-                color: _appBarColors[_selectedIndex],
-              ),
+              leading: Icon(Icons.info, color: _appBarColors[_selectedIndex]),
               title: const Text('About'),
               onTap: () {
                 Navigator.pop(context);
@@ -248,10 +265,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const Divider(),
             ListTile(
-              leading: Icon(
-                Icons.logout,
-                color: _appBarColors[_selectedIndex],
-              ),
+              leading: Icon(Icons.logout, color: _appBarColors[_selectedIndex]),
               title: const Text('Logout'),
               onTap: () => _logout(context),
             ),
@@ -285,7 +299,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           unselectedFontSize: 12,
           iconSize: 28,
           elevation: 0,
-          items: <BottomNavigationBarItem>[
+          items: [
             BottomNavigationBarItem(
               icon: const Icon(Icons.calendar_today),
               label: 'Attendance',

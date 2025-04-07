@@ -11,7 +11,7 @@ class AcademicReportScreen extends StatefulWidget {
 class _AcademicReportScreenState extends State<AcademicReportScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  int _expandedSemester = 1; // Track expanded semester, default to 1
+  int _expandedSemester = 1;
 
   List<Subject> subjectsSemester1 = [
     Subject(name: 'Java', marks: 85, totalMarks: 100),
@@ -43,7 +43,7 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 1),
+      duration: const Duration(milliseconds: 800),
     )..forward();
   }
 
@@ -57,10 +57,18 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Academic Report'),
-        backgroundColor: Colors.orange.shade400, // Darker orange app bar
+        centerTitle: true,
+        title: Text(
+          'Academic Report',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        backgroundColor: Colors.orange.shade700,
+        elevation: 2,
       ),
-      backgroundColor: Colors.orange.shade100, // More vibrant orange background
+      backgroundColor: Colors.orange.shade50,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -78,78 +86,114 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
   }
 
   Widget _buildSemesterSection(int semester, List<Subject> subjects) {
-    return ExpansionPanelList(
-      elevation: 1,
-      expandedHeaderPadding: EdgeInsets.zero,
-      expansionCallback: (int panelIndex, bool isExpanded) {
-        setState(() {
-          _expandedSemester = isExpanded ? 0 : semester;
-        });
-      },
-      children: [
-        ExpansionPanel(
-          headerBuilder: (BuildContext context, bool isExpanded) {
-            return ListTile(
-              title: Text(
-                'Semester $semester',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            );
-          },
-          body: Column(
-            children: subjects.map((subject) {
-              final percentage = subject.marks / subject.totalMarks;
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        subject.name,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      AnimatedBuilder(
-                        animation: _controller,
-                        builder: (context, child) {
-                          return LinearPercentIndicator(
-                            width: MediaQuery.of(context).size.width - 64 - 32,
-                            lineHeight: 10.0,
-                            percent: percentage * _controller.value,
-                            progressColor: _getGradeColor(percentage),
-                            backgroundColor: Colors.grey[300],
-                            animation: true,
-                            animationDuration: 1000,
-                            barRadius: const Radius.circular(5),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Marks: ${subject.marks} / ${subject.totalMarks} (${(percentage * 100).toStringAsFixed(1)}%)',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      Text(
-                        'Grade: ${_getGrade(percentage)}',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ],
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+      child: ExpansionPanelList(
+        elevation: 1,
+        expandedHeaderPadding: EdgeInsets.zero,
+        expansionCallback: (int panelIndex, bool isExpanded) {
+          setState(() {
+            _expandedSemester = isExpanded ? 0 : semester;
+            _controller.reset();
+            _controller.forward();
+          });
+        },
+        children: [
+          ExpansionPanel(
+            headerBuilder: (BuildContext context, bool isExpanded) {
+              return Container(
+                color: Colors.orange.shade100,
+                padding: const EdgeInsets.symmetric(
+                    vertical: 12.0, horizontal: 16.0),
+                child: Text(
+                  'Semester $semester',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.brown.shade800,
                   ),
                 ),
               );
-            }).toList(),
+            },
+            body: Column(
+              children: subjects.asMap().entries.map((entry) {
+                final index = entry.key;
+                final subject = entry.value;
+                final percentage = subject.marks / subject.totalMarks;
+
+                final Animation<double> fadeAnimation = Tween<double>(
+                  begin: 0.0,
+                  end: 1.0,
+                ).animate(CurvedAnimation(
+                  parent: _controller,
+                  curve: Interval(index * 0.1, 1.0, curve: Curves.easeIn),
+                ));
+
+                final Animation<Offset> slideAnimation = Tween<Offset>(
+                  begin: const Offset(0, 0.1),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(
+                  parent: _controller,
+                  curve: Interval(index * 0.1, 1.0, curve: Curves.easeInOut),
+                ));
+
+                return FadeTransition(
+                  opacity: fadeAnimation,
+                  child: SlideTransition(
+                    position: slideAnimation,
+                    child: Card(
+                      color: Colors.orange.shade100,
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              subject.name,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.brown.shade800,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            LinearPercentIndicator(
+                              width: MediaQuery.of(context).size.width - 64 - 32,
+                              lineHeight: 10.0,
+                              percent: percentage,
+                              progressColor: _getGradeColor(percentage),
+                              backgroundColor: Colors.grey[300],
+                              animation: true,
+                              animationDuration: 1000,
+                              barRadius: const Radius.circular(5),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Marks: ${subject.marks} / ${subject.totalMarks} (${(percentage * 100).toStringAsFixed(1)}%)',
+                              style: TextStyle(fontSize: 14, color: Colors.brown.shade700),
+                            ),
+                            Text(
+                              'Grade: ${_getGrade(percentage)}',
+                              style: TextStyle(fontSize: 14, color: Colors.brown.shade700),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            isExpanded: _expandedSemester == semester,
           ),
-          isExpanded: _expandedSemester == semester,
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -159,7 +203,7 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
     } else if (percentage >= 0.8) {
       return Colors.lightGreen;
     } else if (percentage >= 0.7) {
-      return Colors.yellow;
+      return Colors.yellow[700]!;
     } else if (percentage >= 0.6) {
       return Colors.orange;
     } else {

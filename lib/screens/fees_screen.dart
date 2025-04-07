@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class FeesScreen extends StatelessWidget {
-  FeesScreen({Key? key}) : super(key: key);
+  final String rollNumber;
+
+  FeesScreen({Key? key, required this.rollNumber}) : super(key: key);
 
   final List<FeeItem> feeItems = [
     FeeItem(
@@ -84,11 +86,18 @@ class FeesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fees Information'),
+        centerTitle: true,
+        title: const Text(
+          'Fees Information',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         backgroundColor: Colors.green.shade700,
       ),
       body: Container(
-        color: Colors.green.shade50,
+        color: Colors.green.shade100,
         child: Column(
           children: [
             _buildSummaryCard(),
@@ -108,19 +117,27 @@ class FeesScreen extends StatelessWidget {
   }
 
   Widget _buildSummaryCard() {
-    return Card(
+    return Container(
       margin: const EdgeInsets.all(12),
-      elevation: 3,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildSummaryItem("Total Paid", totalPaid, Colors.green),
-            _buildSummaryItem("Total Pending", totalPending, Colors.red),
-            _buildSummaryItem("Overall", totalPaid + totalPending, Colors.blue),
-          ],
-        ),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50, // Match fee card background
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildSummaryItem("Total Paid", totalPaid, Colors.green),
+          _buildSummaryItem("Total Pending", totalPending, Colors.red),
+          _buildSummaryItem("Overall", totalPaid + totalPending, Colors.blue),
+        ],
       ),
     );
   }
@@ -147,72 +164,79 @@ class FeesScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: Icon(
-          fee.status == FeeStatus.paid ? Icons.check_circle : Icons.warning,
-          color: fee.status == FeeStatus.paid
-              ? Colors.green
-              : (isOverdue ? Colors.red : Colors.orange),
-          size: 32,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.green.shade50,
+          borderRadius: BorderRadius.circular(12),
         ),
-        title: Text(
-          fee.title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 6.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Amount: ₹${fee.amount.toStringAsFixed(2)}'),
-              Text(
-                'Due Date: ${DateFormat('dd-MM-yyyy').format(fee.dueDate!)}',
-                style: TextStyle(
-                  color: isOverdue ? Colors.red : Colors.black87,
-                  fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-              if (fee.paymentDate != null)
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(12),
+          leading: Icon(
+            fee.status == FeeStatus.paid ? Icons.check_circle : Icons.warning,
+            color: fee.status == FeeStatus.paid
+                ? Colors.green
+                : (isOverdue ? Colors.red : Colors.orange),
+            size: 32,
+          ),
+          title: Text(
+            fee.title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 6.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Amount: ₹${fee.amount.toStringAsFixed(2)}'),
                 Text(
-                  'Paid on: ${DateFormat('dd-MM-yyyy').format(fee.paymentDate!)}',
-                  style: const TextStyle(color: Colors.green),
-                ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Chip(
-                    label: Text(
-                      fee.status == FeeStatus.paid
-                          ? 'PAID'
-                          : (isOverdue ? 'OVERDUE' : 'PENDING'),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    backgroundColor: fee.status == FeeStatus.paid
-                        ? Colors.green
-                        : isOverdue
-                        ? Colors.red
-                        : Colors.orange,
+                  'Due Date: ${DateFormat('dd-MM-yyyy').format(fee.dueDate!)}',
+                  style: TextStyle(
+                    color: isOverdue ? Colors.red : Colors.black87,
+                    fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
                   ),
-                  const Spacer(),
-                  if (fee.status == FeeStatus.pending)
-                    TextButton.icon(
-                      onPressed: () {
-                        // Implement pay now action
-                      },
-                      icon: const Icon(Icons.payment, color: Colors.blue),
-                      label: const Text("Pay Now", style: TextStyle(color: Colors.blue)),
-                    )
-                  else
-                    TextButton.icon(
-                      onPressed: () {
-                        // Implement receipt action
-                      },
-                      icon: const Icon(Icons.receipt_long, color: Colors.green),
-                      label: const Text("Receipt", style: TextStyle(color: Colors.green)),
+                ),
+                if (fee.paymentDate != null)
+                  Text(
+                    'Paid on: ${DateFormat('dd-MM-yyyy').format(fee.paymentDate!)}',
+                    style: const TextStyle(color: Colors.green),
+                  ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Chip(
+                      label: Text(
+                        fee.status == FeeStatus.paid
+                            ? 'PAID'
+                            : (isOverdue ? 'OVERDUE' : 'PENDING'),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: fee.status == FeeStatus.paid
+                          ? Colors.green
+                          : isOverdue
+                          ? Colors.red
+                          : Colors.orange,
                     ),
-                ],
-              ),
-            ],
+                    const Spacer(),
+                    if (fee.status == FeeStatus.pending)
+                      TextButton.icon(
+                        onPressed: () {
+                          // Implement pay now action
+                        },
+                        icon: const Icon(Icons.payment, color: Colors.blue),
+                        label: const Text("Pay Now", style: TextStyle(color: Colors.blue)),
+                      )
+                    else
+                      TextButton.icon(
+                        onPressed: () {
+                          // Implement receipt action
+                        },
+                        icon: const Icon(Icons.receipt_long, color: Colors.green),
+                        label: const Text("Receipt", style: TextStyle(color: Colors.green)),
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

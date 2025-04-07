@@ -33,8 +33,14 @@ class AdminFeesScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fees Details'),
+        title: const Text('Fees Details',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         backgroundColor: Colors.green.shade700,
+        centerTitle: true,
       ),
       body: Container(
         padding: const EdgeInsets.all(10),

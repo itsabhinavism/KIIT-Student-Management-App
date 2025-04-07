@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'admin_attendance_screen.dart';
 import 'admin_fees_screen.dart';
 import 'login_screen.dart';
 import '../providers/theme_provider.dart';
-
 
 final offlineModeProvider = StateProvider<bool>((ref) => false);
 
@@ -23,15 +24,17 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
 
   int _selectedIndex = 0;
 
-  void _logout(BuildContext context) {
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const LoginScreen()),
-      (Route<dynamic> route) => false,
+          (Route<dynamic> route) => false,
     );
   }
 
   void _toggleOfflineMode(bool value) {
-   
     if (value) {
       showDialog(
         context: context,
@@ -51,8 +54,6 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
                 onPressed: () {
                   ref.read(offlineModeProvider.notifier).state = true;
                   Navigator.of(context).pop();
-
-                
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Offline mode enabled'),
@@ -66,10 +67,7 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
         },
       );
     } else {
-    
       ref.read(offlineModeProvider.notifier).state = false;
-
-     
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Offline mode disabled'),
@@ -89,25 +87,19 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
+              children: const [
+                Text(
                   'KIIT Admin Management App',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                const SizedBox(height: 12),
-                const Text('Version: 1.0.0'),
-                const SizedBox(height: 20),
+                SizedBox(height: 12),
+                Text('Version: 1.0.0'),
+                SizedBox(height: 20),
                 SelectableText(
                   'A Mini Project made by Abhinav Anand, Debsoomonto Sen, Shashwat Sinha and Shreemant Sahu '
-                  'under the guidance of Ms. Namita Panda. The KIIT Admin Portal Mobile App provides administrative '
-                  'tools for managing student data, attendance records, fees information, and other administrative '
-                  'tasks within the KIIT University system.',
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
+                      'under the guidance of Ms. Namita Panda. The KIIT Admin Portal Mobile App provides administrative '
+                      'tools for managing student data, attendance records, fees information, and other administrative '
+                      'tasks within the KIIT University system.',
                 ),
               ],
             ),
@@ -147,174 +139,172 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue.shade900,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/mam.jpg',
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Ms. Namita Panda',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Text(
-                    'ID: ADMIN123456',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Offline Mode Toggle
-            ListTile(
-              leading: Icon(
-                isOfflineMode ? Icons.offline_bolt : Icons.offline_pin_outlined,
-                color: Colors.blue.shade900,
-              ),
-              title: const Text('Offline Mode'),
-              trailing: Switch(
-                value: isOfflineMode,
-                activeColor: Colors.blue.shade900,
-                onChanged: _toggleOfflineMode,
-              ),
-            ),
-            // Dark Mode Toggle
-            ListTile(
-              leading: Icon(
-                isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                color: Colors.blue.shade900,
-              ),
-              title: const Text('Dark Mode'),
-              trailing: Switch(
-                value: isDarkMode,
-                activeColor: Colors.blue.shade900,
-                onChanged: (value) {
-                  ref.read(themeProvider.notifier).toggleTheme();
+      drawer: _buildDrawer(isDarkMode, isOfflineMode),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDashboardItem(
+                title: "Attendance Details",
+                icon: Icons.calendar_today,
+                gradient: const LinearGradient(colors: [Colors.blue, Colors.blueAccent]),
+                onTap: () {
+                  setState(() => _selectedIndex = 0);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => StudentAttendanceScreen()),
+                  );
                 },
               ),
-            ),
-            // About Section
-            ListTile(
-              leading: Icon(
-                Icons.info,
-                color: Colors.blue.shade900,
+              const SizedBox(height: 20),
+              _buildDashboardItem(
+                title: "Fees Details",
+                icon: Icons.attach_money,
+                gradient: LinearGradient(
+                    colors: [Colors.green.shade700, Colors.greenAccent]),
+                onTap: () {
+                  setState(() => _selectedIndex = 1);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AdminFeesScreen()),
+                  );
+                },
               ),
-              title: const Text('About'),
-              onTap: () {
-                Navigator.pop(context);
-                _showAboutDialog(context);
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: Icon(
-                Icons.logout,
-                color: Colors.blue.shade900,
-              ),
-              title: const Text('Logout'),
-              onTap: () => _logout(context),
-            ),
-          ],
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildDashboardItem(
-              context,
-              "Attendance Details",
-              Icons.calendar_today,
-              Colors.blue.shade700,
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => AdminAttendanceScreen()),
-                );
-              },
-              height: 150,
-            ),
-            const SizedBox(height: 20),
-            _buildDashboardItem(
-              context,
-              "Fees Details",
-              Icons.attach_money,
-              Colors.green.shade700,
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const AdminFeesScreen()),
-                );
-              },
-              height: 150,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDashboardItem(
-    BuildContext context,
-    String title,
-    IconData icon,
-    Color color,
-    VoidCallback onTap, {
-    double height = 120,
-  }) {
-    return SizedBox(
-      height: height,
-      width: double.infinity,
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
+  Widget _buildDrawer(bool isDarkMode, bool isOfflineMode) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          DrawerHeader(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.blue.shade900, Colors.blue]),
+            ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, size: 50, color: color),
-                const SizedBox(height: 10),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 20,
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.white,
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/mam.jpg',
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Ms. Namita Panda',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
-                  textAlign: TextAlign.center,
+                ),
+                const Text(
+                  'ID: ADMIN123456',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
                 ),
               ],
             ),
+          ),
+          ListTile(
+            leading: Icon(
+              isOfflineMode ? Icons.offline_bolt : Icons.offline_pin_outlined,
+              color: Colors.blue.shade900,
+            ),
+            title: const Text('Offline Mode'),
+            trailing: Switch(
+              value: isOfflineMode,
+              activeColor: Colors.blue.shade900,
+              onChanged: _toggleOfflineMode,
+            ),
+          ),
+          ListTile(
+            leading: Icon(
+              isDarkMode ? Icons.light_mode : Icons.dark_mode,
+              color: Colors.blue.shade900,
+            ),
+            title: const Text('Dark Mode'),
+            trailing: Switch(
+              value: isDarkMode,
+              activeColor: Colors.blue.shade900,
+              onChanged: (value) {
+                ref.read(themeProvider.notifier).toggleTheme();
+              },
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.info, color: Colors.blue.shade900),
+            title: const Text('About'),
+            onTap: () {
+              Navigator.pop(context);
+              _showAboutDialog(context);
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.redAccent),
+            title: const Text('Logout'),
+            onTap: () => _logout(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDashboardItem({
+    required String title,
+    required IconData icon,
+    required Gradient gradient,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 150,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 6,
+              offset: Offset(0, 3),
+            )
+          ],
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 50, color: Colors.white),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
           ),
         ),
       ),

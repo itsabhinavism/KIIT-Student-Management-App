@@ -3,15 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'screens/login_screen.dart';
-import 'screens/admin_home_screen.dart'; // Fixed import
+import 'screens/admin_home_screen.dart';
 import 'screens/events_screen.dart';
 import 'screens/event_detail_screen.dart';
+
 import 'providers/theme_provider.dart';
 import 'models/event_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(
     options: const FirebaseOptions(
       apiKey: "AIzaSyD8Nbfh07E3J1uU_9q8xUKcaLYZppASXxY",
@@ -31,68 +31,124 @@ class KIITPortalApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDarkMode = ref.watch(themeProvider) == AppTheme.dark;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'KIIT Portal',
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       theme: ThemeData(
+        useMaterial3: true,
         primarySwatch: Colors.blue,
         brightness: Brightness.light,
-        useMaterial3: true,
       ),
       darkTheme: ThemeData(
+        useMaterial3: true,
         primarySwatch: Colors.blue,
         brightness: Brightness.dark,
-        useMaterial3: true,
       ),
-      themeMode: ref.watch(themeProvider) == AppTheme.dark ? ThemeMode.dark : ThemeMode.light,
-      home: LoginScreen(),
-      routes: {
-        '/home': (context) => AdminHomeScreen(),
-        '/events': (context) => EventsScreen(),
-        '/event-detail': (context) {
-          final eventArgs = ModalRoute.of(context)!.settings.arguments;
-          if (eventArgs is Event) {
-            return EventDetailScreen(event: eventArgs);
-          } else if (eventArgs is Map<String, dynamic>) {
-            
-            final event = Event(
-              id: eventArgs['id'] ?? '',
-              name: eventArgs['name'] ?? '',
-              date: _parseDate(eventArgs['date']),
-              category: eventArgs['category'] ?? '',
-              icon: _parseIcon(eventArgs['icon']),
-              color: _parseColor(eventArgs['color']),
-              location: eventArgs['location'] ?? '',
-              description: eventArgs['description'],
-            );
-            return EventDetailScreen(event: event);
-          }
-          throw ArgumentError('Invalid event arguments');
-        },
+      home: const LoginScreen(),
+      onGenerateRoute: (settings) {
+        final args = settings.arguments;
+
+        switch (settings.name) {
+          case '/home':
+            return MaterialPageRoute(builder: (_) => const AdminHomeScreen());
+
+          case '/events':
+            if (args is String) {
+              return MaterialPageRoute(
+                builder: (_) => EventsScreen(rollNumber: args),
+              );
+            } else if (args is Map<String, dynamic> &&
+                args['rollNumber'] is String) {
+              return MaterialPageRoute(
+                builder: (_) =>
+                    EventsScreen(rollNumber: args['rollNumber']),
+              );
+            } else {
+              return _errorRoute("Missing or invalid roll number.");
+            }
+
+          case '/event-detail':
+            if (args is Event) {
+              return MaterialPageRoute(
+                  builder: (_) => EventDetailScreen(event: args));
+            } else if (args is Map<String, dynamic>) {
+              return MaterialPageRoute(
+                builder: (_) => EventDetailScreen(event: _parseEvent(args)),
+              );
+            } else {
+              return _errorRoute("Invalid event data.");
+            }
+
+          default:
+            return _errorRoute("Page not found.");
+        }
       },
     );
   }
 
-  // Helper methods for conversion
+  static Route _errorRoute(String message) {
+    return MaterialPageRoute(
+      builder: (_) => Scaffold(
+        body: Center(child: Text(message, style: const TextStyle(fontSize: 18))),
+      ),
+    );
+  }
+
+  static Event _parseEvent(Map<String, dynamic> map) {
+    return Event(
+      id: map['id'] ?? '',
+      name: map['name'] ?? 'Untitled Event',
+      date: _parseDate(map['date']),
+      category: map['category'] ?? 'General',
+      icon: _parseIcon(map['icon']),
+      color: _parseColor(map['color']),
+      location: map['location'] ?? 'TBD',
+      description: map['description'] ?? 'No description',
+    );
+  }
+
   static DateTime _parseDate(dynamic date) {
     if (date is DateTime) return date;
     if (date is String) {
       try {
         return DateTime.parse(date);
-      } catch (e) {
-        return DateTime.now();
-      }
+      } catch (_) {}
     }
     return DateTime.now();
   }
 
   static IconData _parseIcon(dynamic icon) {
     if (icon is IconData) return icon;
+    if (icon is String) {
+      switch (icon) {
+        case 'event':
+          return Icons.event;
+        case 'school':
+          return Icons.school;
+        case 'sports':
+          return Icons.sports;
+        case 'celebration':
+          return Icons.celebration;
+        case 'code':
+          return Icons.code;
+        default:
+          return Icons.event;
+      }
+    }
     return Icons.event;
   }
 
   static Color _parseColor(dynamic color) {
     if (color is Color) return color;
+    if (color is int) return Color(color);
+    if (color is String) {
+      try {
+        return Color(int.parse(color.replaceFirst('#', '0xff')));
+      } catch (_) {}
+    }
     return Colors.blue;
   }
 }
