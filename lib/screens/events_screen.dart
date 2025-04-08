@@ -176,7 +176,7 @@ class _EventsScreenState extends State<EventsScreen> with TickerProviderStateMix
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.red.shade50,
+      backgroundColor: isDarkMode ? Colors.black : Colors.red.shade50,
       appBar: AppBar(
         title: const Text(
           'Events',
@@ -195,6 +195,7 @@ class _EventsScreenState extends State<EventsScreen> with TickerProviderStateMix
                 context: context,
                 delegate: _EventSearchDelegate(
                   allEvents: [..._upcomingEvents, ..._pastEvents],
+                  isDarkMode: isDarkMode,
                 ),
               );
             },
@@ -228,7 +229,7 @@ class _EventsScreenState extends State<EventsScreen> with TickerProviderStateMix
       ThemeData theme,
       ) {
     return Container(
-      color: Colors.red.shade50,
+      color: isDarkMode ? Colors.black : Colors.red.shade50,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: events.length,
@@ -240,7 +241,7 @@ class _EventsScreenState extends State<EventsScreen> with TickerProviderStateMix
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            color: Colors.red.shade100,
+            color: isDarkMode ? Colors.red.shade900 : Colors.red.shade100,
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: () {
@@ -257,12 +258,12 @@ class _EventsScreenState extends State<EventsScreen> with TickerProviderStateMix
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: event['color'].withOpacity(0.2),
+                        color: event['color'].withOpacity(isDarkMode ? 0.3 : 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         event['icon'],
-                        color: event['color'],
+                        color: isDarkMode ? event['color'].withOpacity(0.8) : event['color'],
                         size: 28,
                       ),
                     ),
@@ -307,24 +308,26 @@ class _EventsScreenState extends State<EventsScreen> with TickerProviderStateMix
 
 class _EventSearchDelegate extends SearchDelegate<Map<String, dynamic>> {
   final List<Map<String, dynamic>> allEvents;
+  final bool isDarkMode;
 
-  _EventSearchDelegate({required this.allEvents});
+  _EventSearchDelegate({required this.allEvents, required this.isDarkMode});
 
   @override
   ThemeData appBarTheme(BuildContext context) {
     final theme = Theme.of(context);
     return theme.copyWith(
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.black87),
-        titleTextStyle: const TextStyle(color: Colors.black87, fontSize: 18),
+        backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
+        iconTheme: IconThemeData(color: isDarkMode ? Colors.white : Colors.black87),
+        titleTextStyle: TextStyle(color: isDarkMode ? Colors.white : Colors.black87, fontSize: 18),
       ),
-      inputDecorationTheme: const InputDecorationTheme(
-        hintStyle: TextStyle(color: Colors.grey),
+      inputDecorationTheme: InputDecorationTheme(
+        hintStyle: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey),
         border: InputBorder.none,
       ),
     );
   }
+
 
   @override
   List<Widget> buildActions(BuildContext context) => [

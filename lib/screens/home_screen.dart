@@ -136,8 +136,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               SelectableText(
                 'A Mini Project made by Abhinav Anand, Debsoomonto Sen, '
                     'Shashwat Sinha and Shreemant Sahu under the guidance of Ms. Namita Panda. '
-                    'The KIIT Portal Mobile App aims to transform the existing SAP portal into a '
-                    'user-friendly mobile application for students and faculty.',
+                    'The KIIT Portal Mobile App aims to modify and upgrade the existing KIIT SAP portal into a '
+                    'user-friendly application for students and faculty that can run on versatile platforms.',
               ),
             ],
           ),

@@ -55,10 +55,12 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text(
+        title: const Text(
           'Academic Report',
           style: TextStyle(
             color: Colors.white,
@@ -68,24 +70,24 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
         backgroundColor: Colors.orange.shade700,
         elevation: 2,
       ),
-      backgroundColor: Colors.orange.shade50,
+      backgroundColor: isDarkMode ? Colors.black : Colors.orange.shade50,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSemesterSection(1, subjectsSemester1),
-            _buildSemesterSection(2, subjectsSemester2),
-            _buildSemesterSection(3, subjectsSemester3),
-            _buildSemesterSection(4, subjectsSemester4),
-            _buildSemesterSection(5, subjectsSemester5),
+            _buildSemesterSection(1, subjectsSemester1, isDarkMode),
+            _buildSemesterSection(2, subjectsSemester2, isDarkMode),
+            _buildSemesterSection(3, subjectsSemester3, isDarkMode),
+            _buildSemesterSection(4, subjectsSemester4, isDarkMode),
+            _buildSemesterSection(5, subjectsSemester5, isDarkMode),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSemesterSection(int semester, List<Subject> subjects) {
+  Widget _buildSemesterSection(int semester, List<Subject> subjects, bool isDarkMode) {
     return AnimatedSize(
       duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
@@ -103,7 +105,7 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
           ExpansionPanel(
             headerBuilder: (BuildContext context, bool isExpanded) {
               return Container(
-                color: Colors.orange.shade100,
+                color: isDarkMode ? Colors.orange.shade900 : Colors.orange.shade100,
                 padding: const EdgeInsets.symmetric(
                     vertical: 12.0, horizontal: 16.0),
                 child: Text(
@@ -111,7 +113,7 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.brown.shade800,
+                    color: isDarkMode ? Colors.white : Colors.brown.shade800,
                   ),
                 ),
               );
@@ -143,7 +145,7 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
                   child: SlideTransition(
                     position: slideAnimation,
                     child: Card(
-                      color: Colors.orange.shade100,
+                      color: isDarkMode ? Colors.orange.shade900 : Colors.orange.shade100,
                       margin: const EdgeInsets.symmetric(vertical: 8.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -159,7 +161,7 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.brown.shade800,
+                                color: isDarkMode ? Colors.white : Colors.brown.shade800,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -168,7 +170,7 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
                               lineHeight: 10.0,
                               percent: percentage,
                               progressColor: _getGradeColor(percentage),
-                              backgroundColor: Colors.grey[300],
+                              backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[300],
                               animation: true,
                               animationDuration: 1000,
                               barRadius: const Radius.circular(5),
@@ -176,11 +178,17 @@ class _AcademicReportScreenState extends State<AcademicReportScreen>
                             const SizedBox(height: 8),
                             Text(
                               'Marks: ${subject.marks} / ${subject.totalMarks} (${(percentage * 100).toStringAsFixed(1)}%)',
-                              style: TextStyle(fontSize: 14, color: Colors.brown.shade700),
+                              style: TextStyle(
+                                fontSize: 14, 
+                                color: isDarkMode ? Colors.grey[300] : Colors.brown.shade700
+                              ),
                             ),
                             Text(
                               'Grade: ${_getGrade(percentage)}',
-                              style: TextStyle(fontSize: 14, color: Colors.brown.shade700),
+                              style: TextStyle(
+                                fontSize: 14, 
+                                color: isDarkMode ? Colors.grey[300] : Colors.brown.shade700
+                              ),
                             ),
                           ],
                         ),
