@@ -84,6 +84,8 @@ class FeesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -97,16 +99,16 @@ class FeesScreen extends StatelessWidget {
         backgroundColor: Colors.green.shade700,
       ),
       body: Container(
-        color: Colors.green.shade100,
+        color: isDarkMode ? Colors.black : Colors.green.shade100,
         child: Column(
           children: [
-            _buildSummaryCard(),
+            _buildSummaryCard(isDarkMode),
             Expanded(
               child: ListView.builder(
                 itemCount: feeItems.length,
                 itemBuilder: (context, index) {
                   final fee = feeItems[index];
-                  return _buildFeeCard(context, fee);
+                  return _buildFeeCard(context, fee, isDarkMode);
                 },
               ),
             ),
@@ -116,12 +118,12 @@ class FeesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard(bool isDarkMode) {
     return Container(
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green.shade50, // Match fee card background
+        color: isDarkMode ? Colors.green.shade900 : Colors.green.shade50,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -134,9 +136,9 @@ class FeesScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildSummaryItem("Total Paid", totalPaid, Colors.green),
-          _buildSummaryItem("Total Pending", totalPending, Colors.red),
-          _buildSummaryItem("Overall", totalPaid + totalPending, Colors.blue),
+          _buildSummaryItem("Total Paid", totalPaid, isDarkMode ? Colors.green[400]! : Colors.green),
+          _buildSummaryItem("Total Pending", totalPending, isDarkMode ? Colors.red[400]! : Colors.red),
+          _buildSummaryItem("Overall", totalPaid + totalPending, isDarkMode ? Colors.blue[400]! : Colors.blue),
         ],
       ),
     );
@@ -155,7 +157,7 @@ class FeesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeeCard(BuildContext context, FeeItem fee) {
+  Widget _buildFeeCard(BuildContext context, FeeItem fee, bool isDarkMode) {
     final isOverdue = fee.status == FeeStatus.pending &&
         fee.dueDate != null &&
         fee.dueDate!.isBefore(DateTime.now());
@@ -166,7 +168,7 @@ class FeesScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.green.shade50,
+          color: isDarkMode ? Colors.green.shade900 : Colors.green.shade50,
           borderRadius: BorderRadius.circular(12),
         ),
         child: ListTile(
@@ -174,31 +176,45 @@ class FeesScreen extends StatelessWidget {
           leading: Icon(
             fee.status == FeeStatus.paid ? Icons.check_circle : Icons.warning,
             color: fee.status == FeeStatus.paid
-                ? Colors.green
-                : (isOverdue ? Colors.red : Colors.orange),
+                ? isDarkMode ? Colors.green[400] : Colors.green
+                : (isOverdue 
+                    ? isDarkMode ? Colors.red[400] : Colors.red 
+                    : isDarkMode ? Colors.orange[400] : Colors.orange),
             size: 32,
           ),
           title: Text(
             fee.title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
           ),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 6.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Amount: ₹${fee.amount.toStringAsFixed(2)}'),
+                Text(
+                  'Amount: ₹${fee.amount.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: isDarkMode ? Colors.grey[300] : Colors.black87,
+                  ),
+                ),
                 Text(
                   'Due Date: ${DateFormat('dd-MM-yyyy').format(fee.dueDate!)}',
                   style: TextStyle(
-                    color: isOverdue ? Colors.red : Colors.black87,
+                    color: isOverdue 
+                        ? isDarkMode ? Colors.red[400] : Colors.red 
+                        : isDarkMode ? Colors.grey[300] : Colors.black87,
                     fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 if (fee.paymentDate != null)
                   Text(
                     'Paid on: ${DateFormat('dd-MM-yyyy').format(fee.paymentDate!)}',
-                    style: const TextStyle(color: Colors.green),
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.green[400] : Colors.green,
+                    ),
                   ),
                 const SizedBox(height: 4),
                 Row(
@@ -211,10 +227,10 @@ class FeesScreen extends StatelessWidget {
                         style: const TextStyle(color: Colors.white),
                       ),
                       backgroundColor: fee.status == FeeStatus.paid
-                          ? Colors.green
+                          ? isDarkMode ? Colors.green[700] : Colors.green
                           : isOverdue
-                          ? Colors.red
-                          : Colors.orange,
+                          ? isDarkMode ? Colors.red[700] : Colors.red
+                          : isDarkMode ? Colors.orange[700] : Colors.orange,
                     ),
                     const Spacer(),
                     if (fee.status == FeeStatus.pending)
@@ -222,16 +238,16 @@ class FeesScreen extends StatelessWidget {
                         onPressed: () {
                           // Implement pay now action
                         },
-                        icon: const Icon(Icons.payment, color: Colors.blue),
-                        label: const Text("Pay Now", style: TextStyle(color: Colors.blue)),
+                        icon: Icon(Icons.payment, color: isDarkMode ? Colors.blue[400] : Colors.blue),
+                        label: Text("Pay Now", style: TextStyle(color: isDarkMode ? Colors.blue[400] : Colors.blue)),
                       )
                     else
                       TextButton.icon(
                         onPressed: () {
                           // Implement receipt action
                         },
-                        icon: const Icon(Icons.receipt_long, color: Colors.green),
-                        label: const Text("Receipt", style: TextStyle(color: Colors.green)),
+                        icon: Icon(Icons.receipt_long, color: isDarkMode ? Colors.green[400] : Colors.green),
+                        label: Text("Receipt", style: TextStyle(color: isDarkMode ? Colors.green[400] : Colors.green)),
                       ),
                   ],
                 ),
