@@ -32,3 +32,10 @@ This project is built using a combination of cutting-edge technologies:
 
 ---
 
+## 📜 License
+
+This project is licensed under the **GNU GPLv3 License** - see the [LICENSE](LICENSE) file for details.  
+Any derivative work must be:
+- Open source
+- Licensed under GPLv3
+- Include original copyright notice
