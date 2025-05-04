@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "185060486029",
+    "firebase_url": "https://kiit-portal-app-default-rtdb.firebaseio.com",
+    "project_id": "kiit-portal-app",
+    "storage_bucket": "kiit-portal-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:185060486029:android:95788e4c775f0f2f832bc4",
+        "android_client_info": {
+          "package_name": "com.example.kiit_portal_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8Nbfh07E3J1uU_9q8xUKcaLYZppASXxY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
