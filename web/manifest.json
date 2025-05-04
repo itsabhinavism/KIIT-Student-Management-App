@@ -1,6 +1,6 @@
 {
-    "name": "kiit_portal_app",
-    "short_name": "kiit_portal_app",
+    "name": "sap_portal_app_new",
+    "short_name": "sap_portal_app_new",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

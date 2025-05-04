@@ -1,7 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.kiit_portal_app">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="KIIT Student Management"
+        android:label="sap_portal_app_new"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
