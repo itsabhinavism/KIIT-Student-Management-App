@@ -9,6 +9,7 @@ import 'events_screen.dart';
 import 'fees_screen.dart';
 import 'login_screen.dart';
 import 'timetable_screen.dart';
+import 'qr_scanner_screen.dart';
 import '../providers/theme_provider.dart';
 
 final offlineModeProvider = StateProvider<bool>((ref) => false);
@@ -38,6 +39,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   late final List<Widget> _screens = [
     AttendanceScreen(rollNumber: widget.rollNumber),
+    QRScannerScreen(rollNumber: widget.rollNumber),
     FeesScreen(rollNumber: widget.rollNumber),
     const AcademicReportScreen(),
     EventsScreen(rollNumber: widget.rollNumber),
@@ -46,6 +48,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   final List<Color> _appBarColors = [
     Colors.lightBlue.shade900,
+    Colors.indigo.shade900,
     Colors.green.shade900,
     Colors.orange.shade900,
     Colors.red.shade900,
@@ -306,13 +309,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               backgroundColor: Colors.lightBlue.shade900,
             ),
             BottomNavigationBarItem(
+              icon: const Icon(Icons.qr_code_scanner),
+              label: 'QR Scanner',
+              backgroundColor: Colors.indigo.shade900,
+            ),
+            BottomNavigationBarItem(
               icon: const Icon(Icons.attach_money),
               label: 'Fees',
               backgroundColor: Colors.green.shade900,
             ),
             BottomNavigationBarItem(
               icon: const Icon(Icons.school),
-              label: 'Academic Report',
+              label: 'Report',
               backgroundColor: Colors.orange.shade900,
             ),
             BottomNavigationBarItem(
