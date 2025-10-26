@@ -8,6 +8,7 @@ import 'screens/home_screen.dart';
 import 'providers/theme_provider.dart';
 import 'providers/chatbot_provider.dart';
 import 'providers/event_provider.dart';
+import 'providers/faculty_chat_provider.dart';
 import 'models/event_model.dart';
 import 'widgets/floating_chat_button.dart';
 
@@ -43,6 +44,7 @@ class KIITPortalApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BookmarkNotifier()),
         ChangeNotifierProvider(create: (_) => FloatingButtonPositionNotifier()),
         ChangeNotifierProvider(create: (_) => OfflineModeNotifier()),
+        ChangeNotifierProvider(create: (_) => FacultyChatNotifier()),
       ],
       child: Consumer<ThemeNotifier>(
         builder: (context, themeNotifier, child) {

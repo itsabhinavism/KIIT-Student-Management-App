@@ -10,6 +10,7 @@ import 'fees_screen.dart';
 import 'login_screen.dart';
 import 'timetable_screen.dart';
 import 'qr_scanner_screen.dart';
+import 'faculty_support_screen.dart';
 import '../providers/theme_provider.dart';
 import '../providers/chatbot_provider.dart';
 import '../providers/event_provider.dart';
@@ -411,6 +412,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 activeColor: _appBarColors[_selectedIndex],
                 onChanged: (_) => context.read<ThemeNotifier>().toggleTheme(),
               ),
+            ),
+            ListTile(
+              leading: Icon(Icons.support_agent, color: _appBarColors[_selectedIndex]),
+              title: const Text('Faculty Support'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FacultySupportScreen(
+                      studentId: widget.rollNumber,
+                      studentName: studentName,
+                    ),
+                  ),
+                );
+              },
             ),
             ListTile(
               leading: Icon(Icons.info, color: _appBarColors[_selectedIndex]),
