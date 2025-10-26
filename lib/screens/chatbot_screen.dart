@@ -279,7 +279,7 @@ class _ChatBotScreenState extends State<ChatBotScreen> {
   }
 }
 
-class _MessageBubble extends StatelessWidget {
+class _MessageBubble extends StatefulWidget {
   final ChatMessage message;
   final bool isDarkMode;
 
@@ -289,82 +289,192 @@ class _MessageBubble extends StatelessWidget {
   });
 
   @override
+  State<_MessageBubble> createState() => _MessageBubbleState();
+}
+
+class _MessageBubbleState extends State<_MessageBubble>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: widget.message.isUser
+          ? const Offset(0.3, 0)
+          : const Offset(-0.3, 0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('h:mm a');
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment:
-            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!message.isUser) ...[
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.blue[900] : Colors.blue[100],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.smart_toy,
-                size: 20,
-                color: isDarkMode ? Colors.blue[200] : Colors.blue[700],
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: message.isUser
-                    ? (isDarkMode ? Colors.blue[700] : Colors.blue[600])
-                    : (isDarkMode ? Colors.grey[800] : Colors.grey[200]),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    message.content,
-                    style: TextStyle(
-                      color: message.isUser
-                          ? Colors.white
-                          : (isDarkMode ? Colors.white : Colors.black87),
-                      fontSize: 15,
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Row(
+            mainAxisAlignment: widget.message.isUser
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!widget.message.isUser) ...[
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: widget.isDarkMode
+                          ? [Colors.blue[900]!, Colors.blue[800]!]
+                          : [Colors.blue[300]!, Colors.blue[500]!],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    timeFormat.format(message.timestamp),
-                    style: TextStyle(
-                      color: message.isUser
-                          ? Colors.white70
-                          : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
-                      fontSize: 11,
+                  child: const Icon(
+                    Icons.smart_toy,
+                    size: 22,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 10),
+              ],
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: widget.message.isUser
+                        ? LinearGradient(
+                            colors: widget.isDarkMode
+                                ? [Colors.blue[700]!, Colors.blue[800]!]
+                                : [Colors.blue[500]!, Colors.blue[700]!],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: !widget.message.isUser
+                        ? (widget.isDarkMode ? Colors.grey[800] : Colors.grey[100])
+                        : null,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(20),
+                      topRight: const Radius.circular(20),
+                      bottomLeft: Radius.circular(widget.message.isUser ? 20 : 4),
+                      bottomRight: Radius.circular(widget.message.isUser ? 4 : 20),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.message.isUser
+                            ? Colors.blue.withOpacity(0.3)
+                            : Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.message.content,
+                        style: TextStyle(
+                          color: widget.message.isUser
+                              ? Colors.white
+                              : (widget.isDarkMode ? Colors.white : Colors.black87),
+                          fontSize: 15,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 10,
+                            color: widget.message.isUser
+                                ? Colors.white70
+                                : (widget.isDarkMode ? Colors.grey[500] : Colors.grey[600]),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            timeFormat.format(widget.message.timestamp),
+                            style: TextStyle(
+                              color: widget.message.isUser
+                                  ? Colors.white70
+                                  : (widget.isDarkMode ? Colors.grey[500] : Colors.grey[600]),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+              if (widget.message.isUser) ...[
+                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: widget.isDarkMode
+                          ? [Colors.grey[700]!, Colors.grey[800]!]
+                          : [Colors.grey[300]!, Colors.grey[400]!],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.person,
+                    size: 22,
+                    color: widget.isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                  ),
+                ),
+              ],
+            ],
           ),
-          if (message.isUser) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.person,
-                size: 20,
-                color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }

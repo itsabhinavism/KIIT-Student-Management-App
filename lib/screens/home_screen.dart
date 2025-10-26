@@ -11,6 +11,8 @@ import 'login_screen.dart';
 import 'timetable_screen.dart';
 import 'qr_scanner_screen.dart';
 import '../providers/theme_provider.dart';
+import '../providers/chatbot_provider.dart';
+import '../providers/event_provider.dart';
 
 class OfflineModeNotifier extends ChangeNotifier {
   bool _isOffline = false;
@@ -67,10 +69,151 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    fetchStudentData();
+    _loadStudentData();
+    _updateChatbotContext();
   }
 
-  Future<void> fetchStudentData() async {
+  void _updateChatbotContext() {
+    // Gather comprehensive app data from ALL tabs and update chatbot context
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final chatbot = context.read<ChatBotNotifier>();
+      final events = context.read<EventNotifier>().events;
+      
+      // COMPREHENSIVE DATA - Matches actual UI shown to user
+      final contextData = {
+        'rollNumber': widget.rollNumber,
+        'studentName': studentName,
+        
+        // ATTENDANCE DATA (from Attendance Tab)
+        'attendance': {
+          'overall': 89.0,
+          'totalClasses': 100,
+          'classesAttended': 89,
+          'classesAbsent': 11,
+          'semester': '5th Semester',
+          'department': 'Computer Science',
+          'subjects': {
+            'Data Structures': {
+              'percentage': 75.0,
+              'attended': 15,
+              'total': 20,
+              'absent': 5,
+            },
+            'Algorithms': {
+              'percentage': 95.0,
+              'attended': 19,
+              'total': 20,
+              'absent': 1,
+            },
+            'Database Systems': {
+              'percentage': 90.0,
+              'attended': 18,
+              'total': 20,
+              'absent': 2,
+            },
+            'Operating Systems': {
+              'percentage': 90.0,
+              'attended': 18,
+              'total': 20,
+              'absent': 2,
+            },
+            'Computer Networks': {
+              'percentage': 95.0,
+              'attended': 19,
+              'total': 20,
+              'absent': 1,
+            },
+          }
+        },
+        
+        // FEES DATA (from Fees Tab)
+        'fees': {
+          'totalFees': 200000,
+          'paidAmount': 150000,
+          'pendingAmount': 50000,
+          'paymentStatus': 'Partially Paid',
+          'lastPaymentDate': '2025-01-15',
+          'lastPaymentAmount': 50000,
+          'nextDueDate': '2025-12-31',
+          'breakdown': {
+            'tuitionFees': 150000,
+            'hostelFees': 30000,
+            'examFees': 10000,
+            'libraryFees': 5000,
+            'otherFees': 5000,
+          },
+          'paymentHistory': [
+            {'date': '2025-01-15', 'amount': 50000, 'mode': 'Online'},
+            {'date': '2024-08-10', 'amount': 50000, 'mode': 'Online'},
+            {'date': '2024-01-05', 'amount': 50000, 'mode': 'Cheque'},
+          ]
+        },
+        
+        // ACADEMIC REPORT DATA (from Report Tab)
+        'academicReport': {
+          'currentSemester': 5,
+          'currentCGPA': 8.5,
+          'previousSemesterSGPA': 8.7,
+          'semesterResults': [
+            {'semester': 1, 'sgpa': 8.2, 'status': 'Pass'},
+            {'semester': 2, 'sgpa': 8.4, 'status': 'Pass'},
+            {'semester': 3, 'sgpa': 8.6, 'status': 'Pass'},
+            {'semester': 4, 'sgpa': 8.7, 'status': 'Pass'},
+          ],
+          'currentSubjects': {
+            'Data Structures': {'grade': 'A', 'credits': 4, 'marks': 85},
+            'Algorithms': {'grade': 'A+', 'credits': 4, 'marks': 92},
+            'Database Systems': {'grade': 'A', 'credits': 4, 'marks': 88},
+            'Operating Systems': {'grade': 'A', 'credits': 4, 'marks': 87},
+            'Computer Networks': {'grade': 'A+', 'credits': 4, 'marks': 91},
+          },
+          'totalCreditsCompleted': 80,
+          'backlogsCount': 0,
+          'rank': 'Top 10%',
+        },
+        
+        // EVENTS DATA (from Events Tab)
+        'events': events.map((e) => {
+          'name': e.name,
+          'date': e.date.toString().substring(0, 10),
+          'category': e.category,
+          'location': e.location,
+          'description': e.description,
+        }).toList(),
+        
+        // TIMETABLE DATA (from Timetable Tab)
+        'timetable': {
+          'todayClasses': 5,
+          'todaySubjects': ['Data Structures', 'Algorithms', 'Database Systems', 'Operating Systems', 'Computer Networks'],
+          'weeklySchedule': {
+            'Monday': ['Data Structures 9-10AM', 'Algorithms 10-11AM', 'Database Systems 11-12PM'],
+            'Tuesday': ['Operating Systems 9-10AM', 'Computer Networks 10-11AM', 'Lab 2-5PM'],
+            'Wednesday': ['Data Structures 9-10AM', 'Algorithms 11-12PM', 'Database Systems 2-3PM'],
+            'Thursday': ['Operating Systems 9-10AM', 'Computer Networks 10-11AM', 'Lab 2-5PM'],
+            'Friday': ['Data Structures 9-10AM', 'Algorithms 10-11AM', 'Project Work 2-5PM'],
+            'Saturday': ['Sports/Extra Activities'],
+            'Sunday': ['Holiday'],
+          },
+          'nextClass': 'Data Structures at 9:00 AM',
+        },
+        
+        // ADDITIONAL STUDENT INFO
+        'personalInfo': {
+          'email': '${widget.rollNumber}@kiit.ac.in',
+          'phone': '+91 9876543210',
+          'branch': 'Computer Science and Engineering',
+          'section': 'CS-A',
+          'mentor': 'Dr. Rajesh Kumar',
+          'yearOfAdmission': 2022,
+          'expectedGraduation': 2026,
+        }
+      };
+      
+      chatbot.updateAppContext(contextData);
+    });
+  }
+
+  Future<void> _loadStudentData() async {
     try {
       final doc = await FirebaseFirestore.instance
           .collection('students')

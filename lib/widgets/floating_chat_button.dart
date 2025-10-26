@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
-import '../screens/chatbot_screen.dart';
+import '../screens/chatbot_screen_enhanced.dart';
 import '../main.dart';
 
 // Notifier to manage the floating button position and visibility
@@ -67,7 +67,7 @@ class _FloatingChatButtonState extends State<FloatingChatButton>
     // Use the global navigator key to push the route
     navigatorKey.currentState?.push(
       MaterialPageRoute(
-        builder: (context) => const ChatBotScreen(),
+        builder: (context) => const ChatBotScreenEnhanced(),
       ),
     ).then((_) {
       // Show the button again when returning from chat
