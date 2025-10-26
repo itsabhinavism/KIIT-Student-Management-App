@@ -1,22 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../screens/chatbot_screen.dart';
 import '../main.dart';
 
-// Provider to manage the floating button position
-final floatingButtonPositionProvider = StateProvider<Offset>((ref) {
-  return const Offset(20, 100); // Default position
-});
+// Notifier to manage the floating button position and visibility
+class FloatingButtonPositionNotifier extends ChangeNotifier {
+  Offset _position = const Offset(20, 100); // Default position
+  bool _isVisible = true;
 
-class FloatingChatButton extends ConsumerStatefulWidget {
+  Offset get position => _position;
+  bool get isVisible => _isVisible;
+
+  void updatePosition(Offset newPosition) {
+    _position = newPosition;
+    notifyListeners();
+  }
+
+  void setVisibility(bool visible) {
+    _isVisible = visible;
+    notifyListeners();
+  }
+}
+
+class FloatingChatButton extends StatefulWidget {
   const FloatingChatButton({super.key});
 
   @override
-  ConsumerState<FloatingChatButton> createState() => _FloatingChatButtonState();
+  State<FloatingChatButton> createState() => _FloatingChatButtonState();
 }
 
-class _FloatingChatButtonState extends ConsumerState<FloatingChatButton>
+class _FloatingChatButtonState extends State<FloatingChatButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -47,19 +61,35 @@ class _FloatingChatButtonState extends ConsumerState<FloatingChatButton>
       _animationController.reverse();
     });
 
+    // Hide the floating button
+    context.read<FloatingButtonPositionNotifier>().setVisibility(false);
+
     // Use the global navigator key to push the route
     navigatorKey.currentState?.push(
       MaterialPageRoute(
         builder: (context) => const ChatBotScreen(),
       ),
-    );
+    ).then((_) {
+      // Show the button again when returning from chat
+      if (mounted) {
+        context.read<FloatingButtonPositionNotifier>().setVisibility(true);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final position = ref.watch(floatingButtonPositionProvider);
-    final isDarkMode = ref.watch(themeProvider) == AppTheme.dark;
+    final positionNotifier = context.watch<FloatingButtonPositionNotifier>();
+    final position = positionNotifier.position;
+    final isVisible = positionNotifier.isVisible;
+    final themeNotifier = context.watch<ThemeNotifier>();
+    final isDarkMode = themeNotifier.theme == AppTheme.dark;
     final screenSize = MediaQuery.of(context).size;
+
+    // Return empty widget if not visible
+    if (!isVisible) {
+      return const SizedBox.shrink();
+    }
 
     return Positioned(
       left: position.dx,
@@ -89,7 +119,7 @@ class _FloatingChatButtonState extends ConsumerState<FloatingChatButton>
                 screenSize.height - 60,
               ),
             );
-            ref.read(floatingButtonPositionProvider.notifier).state = newPosition;
+            context.read<FloatingButtonPositionNotifier>().updatePosition(newPosition);
           }
         },
         onPanEnd: (details) {

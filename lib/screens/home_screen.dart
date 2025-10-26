@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'academic_report.dart';
@@ -12,18 +12,27 @@ import 'timetable_screen.dart';
 import 'qr_scanner_screen.dart';
 import '../providers/theme_provider.dart';
 
-final offlineModeProvider = StateProvider<bool>((ref) => false);
+class OfflineModeNotifier extends ChangeNotifier {
+  bool _isOffline = false;
 
-class HomeScreen extends ConsumerStatefulWidget {
+  bool get isOffline => _isOffline;
+
+  void setOfflineMode(bool value) {
+    _isOffline = value;
+    notifyListeners();
+  }
+}
+
+class HomeScreen extends StatefulWidget {
   final String rollNumber;
 
   const HomeScreen({super.key, required this.rollNumber});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   final Map<String, String> _profileMap = {
@@ -171,7 +180,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             TextButton(
               child: const Text('Enable'),
               onPressed: () {
-                ref.read(offlineModeProvider.notifier).state = true;
+                context.read<OfflineModeNotifier>().setOfflineMode(true);
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Offline mode enabled')),
@@ -182,7 +191,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       );
     } else {
-      ref.read(offlineModeProvider.notifier).state = false;
+      context.read<OfflineModeNotifier>().setOfflineMode(false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Offline mode disabled')),
       );
@@ -191,8 +200,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = ref.watch(themeProvider) == AppTheme.dark;
-    final isOfflineMode = ref.watch(offlineModeProvider);
+    final themeNotifier = context.watch<ThemeNotifier>();
+    final isDarkMode = themeNotifier.theme == AppTheme.dark;
+    final offlineModeNotifier = context.watch<OfflineModeNotifier>();
+    final isOfflineMode = offlineModeNotifier.isOffline;
 
     return Scaffold(
       appBar: AppBar(
@@ -255,7 +266,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               trailing: Switch(
                 value: isDarkMode,
                 activeColor: _appBarColors[_selectedIndex],
-                onChanged: (_) => ref.read(themeProvider.notifier).toggleTheme(),
+                onChanged: (_) => context.read<ThemeNotifier>().toggleTheme(),
               ),
             ),
             ListTile(

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
 import '../models/event_model.dart';
 import '../providers/event_provider.dart';
 import '../screens/event_detail_screen.dart'; // Import for navigation
 
-class EventCard extends ConsumerWidget {
+class EventCard extends StatelessWidget {
   final Event event;
   final bool showBookmark;
 
@@ -15,8 +15,9 @@ class EventCard extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isBookmarked = ref.watch(bookmarkedEventsProvider).contains(event.id);
+  Widget build(BuildContext context) {
+    final bookmarkNotifier = context.watch<BookmarkNotifier>();
+    final isBookmarked = bookmarkNotifier.bookmarkedIds.contains(event.id);
     final theme = Theme.of(context);
 
     return Card(
@@ -74,8 +75,8 @@ class EventCard extends ConsumerWidget {
                         isBookmarked ? Icons.bookmark : Icons.bookmark_border,
                         color: isBookmarked ? event.color : null,
                       ),
-                      onPressed: () => ref
-                          .read(bookmarkedEventsProvider.notifier)
+                      onPressed: () => context
+                          .read<BookmarkNotifier>()
                           .toggleBookmark(event.id),
                     ),
                 ],

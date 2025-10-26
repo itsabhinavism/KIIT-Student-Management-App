@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 
-class SettingsScreen extends ConsumerStatefulWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = ref.watch(themeProvider) == AppTheme.dark;
+    final themeNotifier = context.watch<ThemeNotifier>();
+    final isDarkMode = themeNotifier.theme == AppTheme.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -41,7 +42,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             trailing: Switch(
               value: isDarkMode,
               onChanged: (bool value) {
-                ref.read(themeProvider.notifier).toggleTheme();
+                context.read<ThemeNotifier>().toggleTheme();
               },
             ),
           ),

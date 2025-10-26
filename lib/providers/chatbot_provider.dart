@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/chat_message.dart';
 
@@ -28,11 +28,14 @@ class ChatBotState {
 }
 
 // ChatBot Provider
-class ChatBotNotifier extends StateNotifier<ChatBotState> {
+class ChatBotNotifier extends ChangeNotifier {
   GenerativeModel? _model;
   ChatSession? _chatSession;
+  ChatBotState _state = ChatBotState();
 
-  ChatBotNotifier() : super(ChatBotState()) {
+  ChatBotState get state => _state;
+
+  ChatBotNotifier() {
     _initializeGemini();
   }
 
@@ -42,14 +45,15 @@ class ChatBotNotifier extends StateNotifier<ChatBotState> {
       const apiKey = 'AIzaSyDh5mnGVs0DIqWsTu_ICK_7PrUuEFk_a2I';
       
       if (apiKey.isEmpty || apiKey == 'YOUR_GEMINI_API_KEY_HERE') {
-        state = state.copyWith(
+        _state = _state.copyWith(
           error: 'Please configure your Gemini API key in lib/providers/chatbot_provider.dart',
         );
+        notifyListeners();
         return;
       }
 
       _model = GenerativeModel(
-        model: 'gemini-1.5-flash-latest',  // Use latest stable version
+        model: 'gemini-pro',  // Base stable model
         apiKey: apiKey,
         generationConfig: GenerationConfig(
           temperature: 0.7,
@@ -78,9 +82,10 @@ class ChatBotNotifier extends StateNotifier<ChatBotState> {
       // Add welcome message
       _addWelcomeMessage();
     } catch (e) {
-      state = state.copyWith(
+      _state = _state.copyWith(
         error: 'Failed to initialize Gemini AI: ${e.toString()}',
       );
+      notifyListeners();
     }
   }
 
@@ -99,9 +104,10 @@ class ChatBotNotifier extends StateNotifier<ChatBotState> {
       timestamp: DateTime.now(),
     );
 
-    state = state.copyWith(
+    _state = _state.copyWith(
       messages: [welcomeMessage],
     );
+    notifyListeners();
   }
 
   Future<void> sendMessage(String userMessage) async {
@@ -115,11 +121,12 @@ class ChatBotNotifier extends StateNotifier<ChatBotState> {
       timestamp: DateTime.now(),
     );
 
-    state = state.copyWith(
-      messages: [...state.messages, userMsg],
+    _state = _state.copyWith(
+      messages: [..._state.messages, userMsg],
       isLoading: true,
       error: null,
     );
+    notifyListeners();
 
     try {
       if (_chatSession == null) {
@@ -138,10 +145,11 @@ class ChatBotNotifier extends StateNotifier<ChatBotState> {
         timestamp: DateTime.now(),
       );
 
-      state = state.copyWith(
-        messages: [...state.messages, botMessage],
+      _state = _state.copyWith(
+        messages: [..._state.messages, botMessage],
         isLoading: false,
       );
+      notifyListeners();
     } catch (e) {
       final errorMessage = ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -150,25 +158,23 @@ class ChatBotNotifier extends StateNotifier<ChatBotState> {
         timestamp: DateTime.now(),
       );
 
-      state = state.copyWith(
-        messages: [...state.messages, errorMessage],
+      _state = _state.copyWith(
+        messages: [..._state.messages, errorMessage],
         isLoading: false,
         error: e.toString(),
       );
+      notifyListeners();
     }
   }
 
   void clearChat() {
-    state = ChatBotState();
+    _state = ChatBotState();
+    notifyListeners();
     _initializeGemini();
   }
 
   void clearError() {
-    state = state.copyWith(error: null);
+    _state = _state.copyWith(error: null);
+    notifyListeners();
   }
 }
-
-// Provider definition
-final chatBotProvider = StateNotifierProvider<ChatBotNotifier, ChatBotState>(
-  (ref) => ChatBotNotifier(),
-);

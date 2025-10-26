@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'admin_attendance_screen.dart';
 import 'admin_fees_screen.dart';
 import 'login_screen.dart';
+import 'home_screen.dart';
 import '../providers/theme_provider.dart';
 
-final offlineModeProvider = StateProvider<bool>((ref) => false);
-
-class AdminHomeScreen extends ConsumerStatefulWidget {
+class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
 
   @override
-  ConsumerState<AdminHomeScreen> createState() => _AdminHomeScreenState();
+  State<AdminHomeScreen> createState() => _AdminHomeScreenState();
 }
 
-class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
+class _AdminHomeScreenState extends State<AdminHomeScreen> {
   final List<Color> _appBarColors = [
     Colors.blue.shade900,
     Colors.green.shade700,
@@ -52,7 +51,7 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
               TextButton(
                 child: const Text('Enable'),
                 onPressed: () {
-                  ref.read(offlineModeProvider.notifier).state = true;
+                  context.read<OfflineModeNotifier>().setOfflineMode(true);
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -67,7 +66,7 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
         },
       );
     } else {
-      ref.read(offlineModeProvider.notifier).state = false;
+      context.read<OfflineModeNotifier>().setOfflineMode(false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Offline mode disabled'),
@@ -117,8 +116,10 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = ref.watch(themeProvider) == AppTheme.dark;
-    final isOfflineMode = ref.watch(offlineModeProvider);
+    final themeNotifier = context.watch<ThemeNotifier>();
+    final isDarkMode = themeNotifier.theme == AppTheme.dark;
+    final offlineModeNotifier = context.watch<OfflineModeNotifier>();
+    final isOfflineMode = offlineModeNotifier.isOffline;
 
     return Scaffold(
       appBar: AppBar(
@@ -244,7 +245,7 @@ class _AdminHomeScreenState extends ConsumerState<AdminHomeScreen> {
               value: isDarkMode,
               activeColor: Colors.blue.shade900,
               onChanged: (value) {
-                ref.read(themeProvider.notifier).toggleTheme();
+                context.read<ThemeNotifier>().toggleTheme();
               },
             ),
           ),

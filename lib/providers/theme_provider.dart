@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum AppTheme { light, dark }
 
-final themeProvider = StateNotifierProvider<ThemeNotifier, AppTheme>((ref) {
-  return ThemeNotifier();
-});
+class ThemeNotifier extends ChangeNotifier {
+  AppTheme _theme = AppTheme.light;
 
-class ThemeNotifier extends StateNotifier<AppTheme> {
-  ThemeNotifier() : super(AppTheme.light);
+  AppTheme get theme => _theme;
 
   void toggleTheme() {
-    state = state == AppTheme.light ? AppTheme.dark : AppTheme.light;
+    _theme = _theme == AppTheme.light ? AppTheme.dark : AppTheme.light;
+    notifyListeners();
   }
 }

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'main.dart';
-import 'screens/login_screen.dart';
 import 'screens/admin_home_screen.dart';
 import 'screens/events_screen.dart';
 import 'screens/event_detail_screen.dart';
 import 'screens/home_screen.dart';
 import 'providers/theme_provider.dart';
+import 'providers/chatbot_provider.dart';
+import 'providers/event_provider.dart';
 import 'models/event_model.dart';
 import 'widgets/floating_chat_button.dart';
 
@@ -24,83 +24,97 @@ void main() async {
     ),
   );
 
-  runApp(const ProviderScope(child: KIITPortalApp()));
+  runApp(const KIITPortalApp());
 }
 
 // Global key for navigator
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-class KIITPortalApp extends ConsumerWidget {
+class KIITPortalApp extends StatelessWidget {
   const KIITPortalApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isDarkMode = ref.watch(themeProvider) == AppTheme.dark;
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeNotifier()),
+        ChangeNotifierProvider(create: (_) => ChatBotNotifier()),
+        ChangeNotifierProvider(create: (_) => EventNotifier()),
+        ChangeNotifierProvider(create: (_) => BookmarkNotifier()),
+        ChangeNotifierProvider(create: (_) => FloatingButtonPositionNotifier()),
+        ChangeNotifierProvider(create: (_) => OfflineModeNotifier()),
+      ],
+      child: Consumer<ThemeNotifier>(
+        builder: (context, themeNotifier, child) {
+          final isDarkMode = themeNotifier.theme == AppTheme.dark;
 
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
-      title: 'KIIT',
-      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      theme: ThemeData(
-        useMaterial3: true,
-        primarySwatch: Colors.blue,
-        brightness: Brightness.light,
+          return MaterialApp(
+            navigatorKey: navigatorKey,
+            debugShowCheckedModeBanner: false,
+            title: 'KIIT',
+            themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            theme: ThemeData(
+              useMaterial3: true,
+              primarySwatch: Colors.blue,
+              brightness: Brightness.light,
+            ),
+            darkTheme: ThemeData(
+              useMaterial3: true,
+              primarySwatch: Colors.blue,
+              brightness: Brightness.dark,
+            ),
+            // Builder to add floating chat button overlay to all screens
+            builder: (context, child) {
+              return Stack(
+                children: [
+                  child ?? const SizedBox.shrink(),
+                  const FloatingChatButton(),
+                ],
+              );
+            },
+            // Bypass login for testing - change this to the screen you want to test
+            home: const HomeScreen(rollNumber: '22052611'), // Change back to LoginScreen() for production
+            onGenerateRoute: (settings) {
+              final args = settings.arguments;
+
+              switch (settings.name) {
+                case '/home':
+                  return MaterialPageRoute(builder: (_) => const AdminHomeScreen());
+
+                case '/events':
+                  if (args is String) {
+                    return MaterialPageRoute(
+                      builder: (_) => EventsScreen(rollNumber: args),
+                    );
+                  } else if (args is Map<String, dynamic> &&
+                      args['rollNumber'] is String) {
+                    return MaterialPageRoute(
+                      builder: (_) =>
+                          EventsScreen(rollNumber: args['rollNumber']),
+                    );
+                  } else {
+                    return _errorRoute("Missing or invalid roll number.");
+                  }
+
+                case '/event-detail':
+                  if (args is Event) {
+                    return MaterialPageRoute(
+                        builder: (_) => EventDetailScreen(event: args));
+                  } else if (args is Map<String, dynamic>) {
+                    return MaterialPageRoute(
+                      builder: (_) => EventDetailScreen(event: _parseEvent(args)),
+                    );
+                  } else {
+                    return _errorRoute("Invalid event data.");
+                  }
+
+                default:
+                  return _errorRoute("Page not found.");
+              }
+            },
+          );
+        },
       ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        primarySwatch: Colors.blue,
-        brightness: Brightness.dark,
-      ),
-      // Builder to add floating chat button overlay to all screens
-      builder: (context, child) {
-        return Stack(
-          children: [
-            child ?? const SizedBox.shrink(),
-            const FloatingChatButton(),
-          ],
-        );
-      },
-      // Bypass login for testing - change this to the screen you want to test
-      home: const HomeScreen(rollNumber: '22052611'), // Change back to LoginScreen() for production
-      onGenerateRoute: (settings) {
-        final args = settings.arguments;
-
-        switch (settings.name) {
-          case '/home':
-            return MaterialPageRoute(builder: (_) => const AdminHomeScreen());
-
-          case '/events':
-            if (args is String) {
-              return MaterialPageRoute(
-                builder: (_) => EventsScreen(rollNumber: args),
-              );
-            } else if (args is Map<String, dynamic> &&
-                args['rollNumber'] is String) {
-              return MaterialPageRoute(
-                builder: (_) =>
-                    EventsScreen(rollNumber: args['rollNumber']),
-              );
-            } else {
-              return _errorRoute("Missing or invalid roll number.");
-            }
-
-          case '/event-detail':
-            if (args is Event) {
-              return MaterialPageRoute(
-                  builder: (_) => EventDetailScreen(event: args));
-            } else if (args is Map<String, dynamic>) {
-              return MaterialPageRoute(
-                builder: (_) => EventDetailScreen(event: _parseEvent(args)),
-              );
-            } else {
-              return _errorRoute("Invalid event data.");
-            }
-
-          default:
-            return _errorRoute("Page not found.");
-        }
-      },
     );
   }
 

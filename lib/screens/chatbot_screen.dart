@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/chatbot_provider.dart';
 import '../providers/theme_provider.dart';
 import '../models/chat_message.dart';
 
-class ChatBotScreen extends ConsumerStatefulWidget {
+class ChatBotScreen extends StatefulWidget {
   const ChatBotScreen({super.key});
 
   @override
-  ConsumerState<ChatBotScreen> createState() => _ChatBotScreenState();
+  State<ChatBotScreen> createState() => _ChatBotScreenState();
 }
 
-class _ChatBotScreenState extends ConsumerState<ChatBotScreen> {
+class _ChatBotScreenState extends State<ChatBotScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -39,15 +39,17 @@ class _ChatBotScreenState extends ConsumerState<ChatBotScreen> {
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
 
-    ref.read(chatBotProvider.notifier).sendMessage(message);
+    context.read<ChatBotNotifier>().sendMessage(message);
     _messageController.clear();
     _scrollToBottom();
   }
 
   @override
   Widget build(BuildContext context) {
-    final chatState = ref.watch(chatBotProvider);
-    final isDarkMode = ref.watch(themeProvider) == AppTheme.dark;
+    final chatNotifier = context.watch<ChatBotNotifier>();
+    final chatState = chatNotifier.state;
+    final themeNotifier = context.watch<ThemeNotifier>();
+    final isDarkMode = themeNotifier.theme == AppTheme.dark;
 
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
@@ -101,7 +103,7 @@ class _ChatBotScreenState extends ConsumerState<ChatBotScreen> {
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () {
-              ref.read(chatBotProvider.notifier).clearChat();
+              context.read<ChatBotNotifier>().clearChat();
               _scrollToBottom();
             },
             tooltip: 'Clear Chat',
@@ -129,7 +131,7 @@ class _ChatBotScreenState extends ConsumerState<ChatBotScreen> {
                   IconButton(
                     icon: Icon(Icons.close, color: Colors.red[900]),
                     onPressed: () {
-                      ref.read(chatBotProvider.notifier).clearError();
+                      context.read<ChatBotNotifier>().clearError();
                     },
                   ),
                 ],
