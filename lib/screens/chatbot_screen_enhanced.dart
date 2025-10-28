@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/chat_message.dart';
 import '../providers/chatbot_provider.dart';
 import '../providers/theme_provider.dart';
@@ -15,6 +19,8 @@ class ChatBotScreenEnhanced extends StatefulWidget {
 class _ChatBotScreenEnhancedState extends State<ChatBotScreenEnhanced> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ImagePicker _imagePicker = ImagePicker();
+  List<PlatformFile> _selectedMedia = [];
 
   @override
   void dispose() {
@@ -37,11 +43,178 @@ class _ChatBotScreenEnhancedState extends State<ChatBotScreenEnhanced> {
 
   void _sendMessage([String? customMessage]) {
     final message = customMessage ?? _messageController.text.trim();
-    if (message.isEmpty) return;
+    if (message.isEmpty && _selectedMedia.isEmpty) return;
 
-    context.read<ChatBotNotifier>().sendMessage(message);
+    // Create copies of PlatformFile objects to ensure bytes are retained
+    List<PlatformFile>? filesToSend;
+    if (_selectedMedia.isNotEmpty) {
+      filesToSend = _selectedMedia.map((file) {
+        return PlatformFile(
+          name: file.name,
+          size: file.size,
+          bytes: file.bytes, // Explicitly preserve bytes for web
+          path: kIsWeb ? null : file.path, // Only access path on non-web platforms
+        );
+      }).toList();
+    }
+
+    // Send message with attached files to the chatbot
+    context.read<ChatBotNotifier>().sendMessage(
+      message,
+      attachedFiles: filesToSend,
+    );
+    
     _messageController.clear();
+    setState(() {
+      _selectedMedia.clear();
+    });
     _scrollToBottom();
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      // On web, camera source is not supported
+      if (kIsWeb && source == ImageSource.camera) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Camera not available on web. Please use file picker.'),
+          ),
+        );
+        return;
+      }
+      
+      final XFile? image = await _imagePicker.pickImage(source: source);
+      if (image != null) {
+        // Convert XFile to PlatformFile
+        final bytes = await image.readAsBytes();
+        final platformFile = PlatformFile(
+          name: image.name,
+          size: bytes.length,
+          bytes: bytes,
+          path: kIsWeb ? null : image.path,
+        );
+        setState(() {
+          _selectedMedia.add(platformFile);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png'],
+        withData: kIsWeb, // Load file bytes for web
+      );
+
+      if (result != null) {
+        setState(() {
+          _selectedMedia.addAll(result.files);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking file: $e')),
+        );
+      }
+    }
+  }
+
+  void _removeMedia(int index) {
+    setState(() {
+      _selectedMedia.removeAt(index);
+    });
+  }
+
+  Widget _buildImagePreview(PlatformFile file) {
+    if (kIsWeb) {
+      // For web, use bytes
+      if (file.bytes != null) {
+        return Image.memory(
+          file.bytes!,
+          fit: BoxFit.cover,
+          width: 80,
+          height: 100,
+        );
+      }
+    } else {
+      // For mobile, use path
+      if (file.path != null) {
+        return Image.file(
+          File(file.path!),
+          fit: BoxFit.cover,
+          width: 80,
+          height: 100,
+        );
+      }
+    }
+    // Fallback icon
+    return const Center(
+      child: Icon(Icons.image, size: 40, color: Colors.grey),
+    );
+  }
+
+  void _showMediaOptions(BuildContext context, bool isDarkMode) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[850] : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            if (!kIsWeb) // Hide camera option on web
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.blue),
+                title: const Text('Take Photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: Colors.green),
+              title: Text(kIsWeb ? 'Choose Images' : 'Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.attach_file, color: Colors.orange),
+              title: const Text('Attach File'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickFile();
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -512,97 +685,181 @@ class _ChatBotScreenEnhancedState extends State<ChatBotScreenEnhanced> {
         ],
       ),
       child: SafeArea(
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isDarkMode
-                          ? Colors.blue.withOpacity(0.1)
-                          : Colors.grey.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _messageController,
-                  decoration: InputDecoration(
-                    hintText: 'Ask me anything...',
-                    hintStyle: TextStyle(
-                      color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
-                    ),
-                    filled: true,
-                    fillColor:
-                        isDarkMode ? Colors.grey[800] : Colors.grey[50],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide(
-                        color: isDarkMode
-                            ? Colors.grey[700]!
-                            : Colors.grey[300]!,
-                        width: 1,
+            // Media preview section
+            if (_selectedMedia.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.only(bottom: 12),
+                height: 100,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _selectedMedia.length,
+                  itemBuilder: (context, index) {
+                    final file = _selectedMedia[index];
+                    return Container(
+                      width: 80,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                        ),
                       ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide(
-                        color: isDarkMode
-                            ? Colors.blue[700]!
-                            : Colors.blue[600]!,
-                        width: 2,
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: file.name.endsWith('.pdf') ||
+                                    file.name.endsWith('.doc') ||
+                                    file.name.endsWith('.docx') ||
+                                    file.name.endsWith('.txt')
+                                ? Center(
+                                    child: Icon(
+                                      Icons.insert_drive_file,
+                                      size: 40,
+                                      color: isDarkMode
+                                          ? Colors.blue[300]
+                                          : Colors.blue[600],
+                                    ),
+                                  )
+                                : _buildImagePreview(file),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => _removeMedia(index),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                    );
+                  },
+                ),
+              ),
+            // Input row
+            Row(
+              children: [
+                // Attachment button
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.add_circle_outline,
+                      color: isDarkMode ? Colors.blue[300] : Colors.blue[600],
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
+                    onPressed: () => _showMediaOptions(context, isDarkMode),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDarkMode
+                              ? Colors.blue.withOpacity(0.1)
+                              : Colors.grey.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: 'Ask me anything...',
+                        hintStyle: TextStyle(
+                          color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                        ),
+                        filled: true,
+                        fillColor:
+                            isDarkMode ? Colors.grey[800] : Colors.grey[50],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(28),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(28),
+                          borderSide: BorderSide(
+                            color: isDarkMode
+                                ? Colors.grey[700]!
+                                : Colors.grey[300]!,
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(28),
+                          borderSide: BorderSide(
+                            color: isDarkMode
+                                ? Colors.blue[700]!
+                                : Colors.blue[600]!,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                      ),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                      ),
+                      maxLines: null,
+                      textCapitalization: TextCapitalization.sentences,
+                      enabled: !chatState.isLoading,
+                      onSubmitted: (_) => _sendMessage(),
                     ),
                   ),
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                    fontSize: 15,
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isDarkMode
+                          ? [Colors.blue[700]!, Colors.blue[800]!]
+                          : [Colors.blue[500]!, Colors.blue[700]!],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  maxLines: null,
-                  textCapitalization: TextCapitalization.sentences,
-                  enabled: !chatState.isLoading,
-                  onSubmitted: (_) => _sendMessage(),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isDarkMode
-                      ? [Colors.blue[700]!, Colors.blue[800]!]
-                      : [Colors.blue[500]!, Colors.blue[700]!],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withOpacity(0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                  child: IconButton(
+                    icon: Icon(
+                      chatState.isLoading ? Icons.stop : Icons.send_rounded,
+                      size: 22,
+                    ),
+                    color: Colors.white,
+                    onPressed: chatState.isLoading ? null : () => _sendMessage(),
                   ),
-                ],
-              ),
-              child: IconButton(
-                icon: Icon(
-                  chatState.isLoading ? Icons.stop : Icons.send_rounded,
-                  size: 22,
                 ),
-                color: Colors.white,
-                onPressed: chatState.isLoading ? null : () => _sendMessage(),
-              ),
+              ],
             ),
           ],
         ),
@@ -775,6 +1032,74 @@ class _EnhancedMessageBubbleState extends State<_EnhancedMessageBubble>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Show image thumbnails if there are attachments
+                      if (widget.message.attachments != null && 
+                          widget.message.attachments!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: widget.message.attachments!
+                                .where((file) {
+                                  final name = file.name.toLowerCase();
+                                  return name.endsWith('.jpg') ||
+                                      name.endsWith('.jpeg') ||
+                                      name.endsWith('.png') ||
+                                      name.endsWith('.gif') ||
+                                      name.endsWith('.webp');
+                                })
+                                .take(3) // Show max 3 thumbnails
+                                .map((file) => _buildAttachmentThumbnail(file))
+                                .toList(),
+                          ),
+                        ),
+                      // Show file count if there are non-image attachments
+                      if (widget.message.attachments != null && 
+                          widget.message.attachments!.any((file) {
+                            final name = file.name.toLowerCase();
+                            return !name.endsWith('.jpg') &&
+                                !name.endsWith('.jpeg') &&
+                                !name.endsWith('.png') &&
+                                !name.endsWith('.gif') &&
+                                !name.endsWith('.webp');
+                          }))
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.attach_file,
+                                size: 14,
+                                color: widget.message.isUser
+                                    ? Colors.white70
+                                    : (widget.isDarkMode
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600]),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${widget.message.attachments!.where((f) {
+                                  final name = f.name.toLowerCase();
+                                  return !name.endsWith('.jpg') &&
+                                      !name.endsWith('.jpeg') &&
+                                      !name.endsWith('.png') &&
+                                      !name.endsWith('.gif') &&
+                                      !name.endsWith('.webp');
+                                }).length} file(s)',
+                                style: TextStyle(
+                                  color: widget.message.isUser
+                                      ? Colors.white70
+                                      : (widget.isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600]),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       Text(
                         widget.message.content,
                         style: TextStyle(
@@ -850,6 +1175,78 @@ class _EnhancedMessageBubbleState extends State<_EnhancedMessageBubble>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAttachmentThumbnail(PlatformFile file) {
+    // Debug: Check if bytes are available
+    final hasBytes = file.bytes != null;
+    final hasPath = !kIsWeb && file.path != null; // Only check path on non-web
+    
+    // Show image or placeholder
+    Widget imageWidget;
+    if (kIsWeb) {
+      if (hasBytes) {
+        imageWidget = Image.memory(
+          file.bytes!,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            print('Error loading image from bytes: $error');
+            return _buildFileIcon();
+          },
+        );
+      } else {
+        print('Warning: No bytes available for file ${file.name} on web');
+        imageWidget = _buildFileIcon();
+      }
+    } else {
+      if (hasPath) {
+        imageWidget = Image.file(
+          File(file.path!),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            print('Error loading image from path: $error');
+            return _buildFileIcon();
+          },
+        );
+      } else {
+        print('Warning: No path available for file ${file.name} on mobile');
+        imageWidget = _buildFileIcon();
+      }
+    }
+    
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: widget.message.isUser
+              ? Colors.white.withOpacity(0.3)
+              : (widget.isDarkMode
+                  ? Colors.grey[700]!
+                  : Colors.grey[300]!),
+          width: 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(6),
+        child: imageWidget,
+      ),
+    );
+  }
+
+  Widget _buildFileIcon() {
+    return Center(
+      child: Icon(
+        Icons.image,
+        size: 24,
+        color: widget.message.isUser
+            ? Colors.white.withOpacity(0.5)
+            : (widget.isDarkMode
+                ? Colors.grey[600]
+                : Colors.grey[400]),
       ),
     );
   }

@@ -61,7 +61,7 @@ android {
 
 dependencies {
     // Kotlin and Flutter compatibility
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.20"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.10"
 
     // Multidex support
     implementation 'androidx.multidex:multidex:2.0.1'

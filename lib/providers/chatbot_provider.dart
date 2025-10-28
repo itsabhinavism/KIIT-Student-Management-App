@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:file_picker/file_picker.dart';
 import '../models/chat_message.dart';
 
 // State class to manage chat data
@@ -208,7 +209,7 @@ class ChatBotNotifier extends ChangeNotifier {
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 8192, // Increased for complete responses
         ),
         safetySettings: [
           SafetySetting(HarmCategory.harassment, HarmBlockThreshold.medium),
@@ -297,15 +298,16 @@ class ChatBotNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> sendMessage(String userMessage) async {
-    if (userMessage.trim().isEmpty) return;
+  Future<void> sendMessage(String userMessage, {List<PlatformFile>? attachedFiles}) async {
+    if (userMessage.trim().isEmpty && (attachedFiles == null || attachedFiles.isEmpty)) return;
 
-    // Add user message
+    // Add user message with attachments
     final userMsg = ChatMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      content: userMessage.trim(),
+      content: userMessage.trim().isEmpty ? '[File(s) attached]' : userMessage.trim(),
       isUser: true,
       timestamp: DateTime.now(),
+      attachments: attachedFiles,
     );
 
     _state = _state.copyWith(
@@ -320,20 +322,82 @@ class ChatBotNotifier extends ChangeNotifier {
         throw Exception('Chat session not initialized. Please check your API key.');
       }
 
-      // Build enhanced prompt with current context
-      String enhancedMessage = userMessage.trim();
-      if (_appContext != null && _appContext!.isNotEmpty) {
-        enhancedMessage += '\n\n[Current Student Data: ${_buildContextualPrompt()}]';
+      // Build message content with files
+      List<Part> parts = [];
+      
+      // Add text part if there's a message
+      if (userMessage.trim().isNotEmpty) {
+        String enhancedMessage = userMessage.trim();
+        if (_appContext != null && _appContext!.isNotEmpty) {
+          enhancedMessage += '\n\n[Current Student Data: ${_buildContextualPrompt()}]';
+        }
+        parts.add(TextPart(enhancedMessage));
+      }
+      
+      // Add file parts if there are attachments
+      if (attachedFiles != null && attachedFiles.isNotEmpty) {
+        for (var file in attachedFiles) {
+          if (file.bytes != null) {
+            // Determine MIME type
+            String mimeType = 'application/octet-stream';
+            if (file.name.endsWith('.jpg') || file.name.endsWith('.jpeg')) {
+              mimeType = 'image/jpeg';
+            } else if (file.name.endsWith('.png')) {
+              mimeType = 'image/png';
+            } else if (file.name.endsWith('.pdf')) {
+              mimeType = 'application/pdf';
+            } else if (file.name.endsWith('.txt')) {
+              mimeType = 'text/plain';
+            }
+            
+            // Add data part
+            parts.add(DataPart(mimeType, file.bytes!));
+          }
+        }
+        
+        // If only files without text, add a prompt
+        if (userMessage.trim().isEmpty) {
+          parts.insert(0, TextPart('Please analyze and describe the content of these file(s) in detail.'));
+        }
       }
 
-      // Send message to Gemini
-      final response = await _chatSession!.sendMessage(
-        Content.text(enhancedMessage),
-      );
+      // Retry logic for overloaded model
+      int maxRetries = 3;
+      int retryCount = 0;
+      Duration retryDelay = const Duration(seconds: 2);
+      
+      GenerateContentResponse? response;
+      
+      while (retryCount < maxRetries) {
+        try {
+          // Send message to Gemini with files
+          response = await _chatSession!.sendMessage(
+            Content.multi(parts),
+          );
+          break; // Success, exit retry loop
+        } catch (e) {
+          retryCount++;
+          if (e.toString().contains('503') || 
+              e.toString().contains('overloaded') || 
+              e.toString().contains('UNAVAILABLE')) {
+            if (retryCount < maxRetries) {
+              // Wait before retrying
+              await Future.delayed(retryDelay * retryCount);
+              continue;
+            } else {
+              // Max retries reached
+              throw Exception('The AI model is currently overloaded. Please try again in a moment.');
+            }
+          } else {
+            // Other error, don't retry
+            rethrow;
+          }
+        }
+      }
 
       final botMessage = ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        content: response.text ?? 'Sorry, I couldn\'t generate a response.',
+        content: response?.text ?? 'Sorry, I couldn\'t generate a response.',
         isUser: false,
         timestamp: DateTime.now(),
       );
@@ -344,9 +408,20 @@ class ChatBotNotifier extends ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
+      String errorMsg = 'Sorry, I encountered an error: ${e.toString()}';
+      
+      // Provide user-friendly error messages
+      if (e.toString().contains('overloaded') || e.toString().contains('503')) {
+        errorMsg = '⚠️ The AI is experiencing high traffic right now. Please wait a moment and try again.';
+      } else if (e.toString().contains('API key')) {
+        errorMsg = '⚠️ API key issue. Please check your configuration.';
+      } else if (e.toString().contains('quota')) {
+        errorMsg = '⚠️ API quota exceeded. Please try again later.';
+      }
+      
       final errorMessage = ChatMessage(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        content: 'Sorry, I encountered an error: ${e.toString()}\n\nPlease try again.',
+        content: errorMsg,
         isUser: false,
         timestamp: DateTime.now(),
       );
