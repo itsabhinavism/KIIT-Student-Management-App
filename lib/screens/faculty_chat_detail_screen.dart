@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../providers/faculty_chat_provider.dart';
 import '../providers/theme_provider.dart';
 import '../models/faculty_message.dart';
@@ -26,6 +30,8 @@ class _FacultyChatDetailScreenState extends State<FacultyChatDetailScreen>
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late AnimationController _animationController;
+  final ImagePicker _imagePicker = ImagePicker();
+  List<PlatformFile> _selectedMedia = [];
 
   @override
   void initState() {
@@ -64,16 +70,180 @@ class _FacultyChatDetailScreenState extends State<FacultyChatDetailScreen>
 
   void _sendMessage() {
     final message = _messageController.text.trim();
-    if (message.isEmpty) return;
+    if (message.isEmpty && _selectedMedia.isEmpty) return;
 
-    context.read<FacultyChatNotifier>().sendMessage(
-          widget.chatRoom.id,
-          message,
-          widget.studentId,
-          widget.studentName,
-        );
+    // TODO: Handle media files with the message
+    // For now, just send the text message
+    if (message.isNotEmpty) {
+      context.read<FacultyChatNotifier>().sendMessage(
+            widget.chatRoom.id,
+            message,
+            widget.studentId,
+            widget.studentName,
+          );
+    }
+    
+    // Show a message about attached files
+    if (_selectedMedia.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${_selectedMedia.length} file(s) attached (processing coming soon)'),
+          backgroundColor: Colors.indigo,
+        ),
+      );
+    }
+    
     _messageController.clear();
+    setState(() {
+      _selectedMedia.clear();
+    });
     _scrollToBottom();
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      // On web, camera source is not supported
+      if (kIsWeb && source == ImageSource.camera) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Camera not available on web. Please use file picker.'),
+          ),
+        );
+        return;
+      }
+      
+      final XFile? image = await _imagePicker.pickImage(source: source);
+      if (image != null) {
+        // Convert XFile to PlatformFile
+        final bytes = await image.readAsBytes();
+        final platformFile = PlatformFile(
+          name: image.name,
+          size: bytes.length,
+          bytes: bytes,
+          path: kIsWeb ? null : image.path,
+        );
+        setState(() {
+          _selectedMedia.add(platformFile);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png'],
+        withData: kIsWeb, // Load file bytes for web
+      );
+
+      if (result != null) {
+        setState(() {
+          _selectedMedia.addAll(result.files);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking file: $e')),
+        );
+      }
+    }
+  }
+
+  void _removeMedia(int index) {
+    setState(() {
+      _selectedMedia.removeAt(index);
+    });
+  }
+
+  Widget _buildImagePreview(PlatformFile file) {
+    if (kIsWeb) {
+      // For web, use bytes
+      if (file.bytes != null) {
+        return Image.memory(
+          file.bytes!,
+          fit: BoxFit.cover,
+          width: 80,
+          height: 100,
+        );
+      }
+    } else {
+      // For mobile, use path
+      if (file.path != null) {
+        return Image.file(
+          File(file.path!),
+          fit: BoxFit.cover,
+          width: 80,
+          height: 100,
+        );
+      }
+    }
+    // Fallback icon
+    return const Center(
+      child: Icon(Icons.image, size: 40, color: Colors.grey),
+    );
+  }
+
+  void _showMediaOptions(BuildContext context, bool isDarkMode) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[850] : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            if (!kIsWeb) // Hide camera option on web
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.indigo),
+                title: const Text('Take Photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: Colors.blue),
+              title: Text(kIsWeb ? 'Choose Images' : 'Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.attach_file, color: Colors.orange),
+              title: const Text('Attach File'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickFile();
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -241,110 +411,172 @@ class _FacultyChatDetailScreenState extends State<FacultyChatDetailScreen>
         ],
       ),
       child: SafeArea(
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Attachment Button
-            Container(
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: Icon(
-                  Icons.attach_file,
-                  color: Colors.indigo.shade600,
-                ),
-                onPressed: () {
-                  // TODO: Implement file attachment
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('File attachment coming soon!'),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-
-            // Message Input
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isDarkMode
-                          ? Colors.indigo.withOpacity(0.1)
-                          : Colors.grey.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _messageController,
-                  decoration: InputDecoration(
-                    hintText: 'Type your message...',
-                    hintStyle: TextStyle(
-                      color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
-                    ),
-                    filled: true,
-                    fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[50],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
-                        width: 1,
+            // Media preview section
+            if (_selectedMedia.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.only(bottom: 12),
+                height: 100,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _selectedMedia.length,
+                  itemBuilder: (context, index) {
+                    final file = _selectedMedia[index];
+                    return Container(
+                      width: 80,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                        ),
                       ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide(
-                        color: Colors.indigo.shade600,
-                        width: 2,
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: file.name.endsWith('.pdf') ||
+                                    file.name.endsWith('.doc') ||
+                                    file.name.endsWith('.docx') ||
+                                    file.name.endsWith('.txt')
+                                ? Center(
+                                    child: Icon(
+                                      Icons.insert_drive_file,
+                                      size: 40,
+                                      color: isDarkMode
+                                          ? Colors.indigo[300]
+                                          : Colors.indigo[600],
+                                    ),
+                                  )
+                                : _buildImagePreview(file),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => _removeMedia(index),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
-                    ),
-                  ),
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                    fontSize: 15,
-                  ),
-                  maxLines: null,
-                  textCapitalization: TextCapitalization.sentences,
-                  onSubmitted: (_) => _sendMessage(),
+                    );
+                  },
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
+            // Input row
+            Row(
+              children: [
+                // Attachment Button
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.add_circle_outline,
+                      color: Colors.indigo.shade600,
+                    ),
+                    onPressed: () => _showMediaOptions(context, isDarkMode),
+                  ),
+                ),
+                const SizedBox(width: 12),
 
-            // Send Button
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.indigo.shade600, Colors.blue.shade600],
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.indigo.withOpacity(0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                // Message Input
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDarkMode
+                              ? Colors.indigo.withOpacity(0.1)
+                              : Colors.grey.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: 'Type your message...',
+                        hintStyle: TextStyle(
+                          color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                        ),
+                        filled: true,
+                        fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[50],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(28),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(28),
+                          borderSide: BorderSide(
+                            color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(28),
+                          borderSide: BorderSide(
+                            color: Colors.indigo.shade600,
+                            width: 2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                      ),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                      ),
+                      maxLines: null,
+                      textCapitalization: TextCapitalization.sentences,
+                      onSubmitted: (_) => _sendMessage(),
+                    ),
                   ),
-                ],
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.send_rounded, size: 22),
-                color: Colors.white,
-                onPressed: _sendMessage,
-              ),
+                ),
+                const SizedBox(width: 12),
+
+                // Send Button
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.indigo.shade600, Colors.blue.shade600],
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.indigo.withOpacity(0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.send_rounded, size: 22),
+                    color: Colors.white,
+                    onPressed: _sendMessage,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

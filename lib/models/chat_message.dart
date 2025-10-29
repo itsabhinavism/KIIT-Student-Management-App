@@ -1,9 +1,12 @@
+import 'package:file_picker/file_picker.dart';
+
 class ChatMessage {
   final String id;
   final String content;
   final bool isUser;
   final DateTime timestamp;
   final bool isLoading;
+  final List<PlatformFile>? attachments;
 
   ChatMessage({
     required this.id,
@@ -11,6 +14,7 @@ class ChatMessage {
     required this.isUser,
     required this.timestamp,
     this.isLoading = false,
+    this.attachments,
   });
 
   ChatMessage copyWith({
@@ -19,6 +23,7 @@ class ChatMessage {
     bool? isUser,
     DateTime? timestamp,
     bool? isLoading,
+    List<PlatformFile>? attachments,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -26,6 +31,7 @@ class ChatMessage {
       isUser: isUser ?? this.isUser,
       timestamp: timestamp ?? this.timestamp,
       isLoading: isLoading ?? this.isLoading,
+      attachments: attachments ?? this.attachments,
     );
   }
 }
