@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
+import '../providers/auth_provider.dart';
+import '../services/api_service.dart';
 
 class QRScannerScreen extends StatefulWidget {
-  final String rollNumber;
-
-  const QRScannerScreen({super.key, required this.rollNumber});
+  const QRScannerScreen({super.key});
 
   @override
   State<QRScannerScreen> createState() => _QRScannerScreenState();
@@ -17,6 +19,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   String? scannedData;
   bool attendanceMarked = false;
   DateTime? scanTime;
+  bool isProcessing = false;
+  String? errorMessage;
 
   @override
   void dispose() {
@@ -25,53 +29,123 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   }
 
   void _handleBarcode(BarcodeCapture capture) {
-    if (!isScanning) return;
+    if (!isScanning || isProcessing) return;
 
     final List<Barcode> barcodes = capture.barcodes;
     for (final barcode in barcodes) {
       if (barcode.rawValue != null) {
         setState(() {
           isScanning = false;
+          isProcessing = true;
           scannedData = barcode.rawValue;
           scanTime = DateTime.now();
-          attendanceMarked = true;
+          errorMessage = null;
         });
 
-        // Simulate attendance marking (you can integrate with Firebase here)
+        // Mark attendance through API
         _markAttendance(barcode.rawValue!);
         break;
       }
     }
   }
 
-  Future<void> _markAttendance(String qrData) async {
-    // Simulate API call or Firebase write
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Show success message
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Attendance marked successfully!',
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
+  Future<void> _markAttendance(String token) async {
+    try {
+      // Get user's current location
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception(
+            'Location services are disabled. Please enable location services.');
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Location permissions are denied');
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception('Location permissions are permanently denied');
+      }
+
+      // Get current position
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
       );
+
+      // Call API to mark attendance
+      if (!mounted) return;
+      final apiService = context.read<ApiService>();
+      final result = await apiService.scanAttendance(
+        token: token,
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+
+      if (mounted) {
+        setState(() {
+          attendanceMarked = result['success'] ?? true;
+          isProcessing = false;
+        });
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    result['message'] ?? 'Attendance marked successfully!',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          attendanceMarked = false;
+          isProcessing = false;
+          errorMessage = e.toString().replaceAll('Exception: ', '');
+        });
+
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    errorMessage ?? 'Failed to mark attendance',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
     }
   }
 
@@ -81,6 +155,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       scannedData = null;
       attendanceMarked = false;
       scanTime = null;
+      isProcessing = false;
+      errorMessage = null;
     });
   }
 
@@ -109,6 +185,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           // Success View
           if (!isScanning && attendanceMarked) _buildSuccessView(isDarkMode),
 
+          // Error View
+          if (!isScanning && !attendanceMarked && errorMessage != null)
+            _buildErrorView(isDarkMode),
+
           // Top Info Bar
           _buildTopBar(isDarkMode),
         ],
@@ -117,6 +197,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   }
 
   Widget _buildTopBar(bool isDarkMode) {
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
+    final rollNumber = user?.rollNo ?? 'N/A';
+
     return Positioned(
       top: 0,
       left: 0,
@@ -168,10 +252,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                         ),
                       ),
                       Text(
-                        'Roll: ${widget.rollNumber}',
+                        'Roll: $rollNumber',
                         style: TextStyle(
                           fontSize: 14,
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                          color:
+                              isDarkMode ? Colors.grey[400] : Colors.grey[600],
                         ),
                       ),
                     ],
@@ -228,16 +313,16 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                       decoration: BoxDecoration(
                         border: Border(
                           top: index < 2
-                              ? BorderSide(color: Colors.blue, width: 4)
+                              ? const BorderSide(color: Colors.blue, width: 4)
                               : BorderSide.none,
                           bottom: index >= 2
-                              ? BorderSide(color: Colors.blue, width: 4)
+                              ? const BorderSide(color: Colors.blue, width: 4)
                               : BorderSide.none,
                           left: index % 2 == 0
-                              ? BorderSide(color: Colors.blue, width: 4)
+                              ? const BorderSide(color: Colors.blue, width: 4)
                               : BorderSide.none,
                           right: index % 2 != 0
-                              ? BorderSide(color: Colors.blue, width: 4)
+                              ? const BorderSide(color: Colors.blue, width: 4)
                               : BorderSide.none,
                         ),
                       ),
@@ -257,7 +342,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                       child: Container(
                         height: 2,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [
                               Colors.transparent,
                               Colors.blue,
@@ -309,12 +394,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                     ),
                   ],
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.qr_code_2, color: Colors.white, size: 20),
-                    const SizedBox(width: 8),
-                    const Text(
+                    Icon(Icons.qr_code_2, color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Text(
                       'Align QR code within frame',
                       style: TextStyle(
                         color: Colors.white,
@@ -346,6 +431,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   Widget _buildSuccessView(bool isDarkMode) {
     final timeFormat = DateFormat('h:mm a');
     final dateFormat = DateFormat('MMM dd, yyyy');
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
+    final rollNumber = user?.rollNo ?? 'N/A';
 
     return Container(
       color: isDarkMode ? Colors.grey[900] : Colors.white,
@@ -368,7 +456,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                     color: Colors.green.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.check_circle,
                     color: Colors.green,
                     size: 80,
@@ -406,7 +494,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 _buildInfoRow(
                   Icons.person,
                   'Roll Number',
-                  widget.rollNumber,
+                  rollNumber,
                   isDarkMode,
                 ),
                 const Divider(height: 24),
@@ -507,6 +595,105 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildErrorView(bool isDarkMode) {
+    return Container(
+      color: isDarkMode ? Colors.grey[900] : Colors.white,
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Error Animation
+          TweenAnimationBuilder(
+            tween: Tween<double>(begin: 0, end: 1),
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.elasticOut,
+            builder: (context, double value, child) {
+              return Transform.scale(
+                scale: value,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.error,
+                    color: Colors.red,
+                    size: 80,
+                  ),
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 32),
+
+          Text(
+            'Attendance Failed',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          Container(
+            padding: const EdgeInsets.all(20),
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+              ),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: Colors.orange[700],
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  errorMessage ?? 'An error occurred',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          ElevatedButton.icon(
+            onPressed: _resetScanner,
+            icon: const Icon(Icons.qr_code_scanner),
+            label: const Text('Try Again'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue[700],
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32,
+                vertical: 16,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              elevation: 4,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
