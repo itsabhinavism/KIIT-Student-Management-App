@@ -184,6 +184,16 @@ class ApiService {
 
   // ============= CHAT ENDPOINTS =============
 
+  /// GET /chat/contacts - Get available teachers to chat with (Student only)
+  Future<List<User>> getChatContacts() async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/chat/contacts'),
+      headers: _headers,
+    );
+    final data = _handleResponse(response) as List;
+    return data.map((json) => User.fromJson(json)).toList();
+  }
+
   /// GET /chat/rooms - Get chat rooms
   Future<List<ChatRoom>> getChatRooms() async {
     final response = await http.get(

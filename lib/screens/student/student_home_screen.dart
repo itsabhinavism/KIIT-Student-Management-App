@@ -4,10 +4,58 @@ import '../../models/schedule_model.dart';
 import '../../models/course_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+import '../chat/chat_screen.dart';
 
 /// StudentHomeScreen: Dashboard for students showing today's schedule and enrollments
 class StudentHomeScreen extends StatelessWidget {
   const StudentHomeScreen({super.key});
+
+  Future<void> _onInitiateChat(
+    BuildContext context,
+    String teacherId,
+    String teacherName,
+  ) async {
+    // Show a loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final apiService = context.read<ApiService>();
+      // Call the backend to get or create the room
+      final roomId = await apiService.initiateChat(teacherId);
+
+      // Pop the loading dialog
+      if (context.mounted) Navigator.pop(context);
+
+      // Navigate to the chat screen
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              roomId: roomId,
+              roomName: teacherName,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      // Pop the loading dialog
+      if (context.mounted) Navigator.pop(context);
+      // Show an error
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start chat: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -229,6 +277,53 @@ class StudentHomeScreen extends StatelessWidget {
                                             color: Colors.grey.shade600,
                                           ),
                                         ),
+                                        if (item.teacher != null) ...[
+                                          const Spacer(),
+                                          InkWell(
+                                            onTap: () => _onInitiateChat(
+                                              context,
+                                              item.teacher!.id,
+                                              item.teacher!.fullName,
+                                            ),
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 6,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.green.shade50,
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: Colors.green.shade300,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.chat_bubble_outline,
+                                                    size: 16,
+                                                    color:
+                                                        Colors.green.shade700,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    'Chat',
+                                                    style: TextStyle(
+                                                      color:
+                                                          Colors.green.shade700,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize: 13,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ],

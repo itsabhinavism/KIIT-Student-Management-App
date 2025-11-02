@@ -41,6 +41,7 @@ dependencies:
   percent_indicator: ^4.2.5
   webview_flutter: ^4.13.0
   lucide_icons_flutter: ^3.1.5
+  flutter_dotenv: ^6.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -75,6 +76,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - .env
     - assets/mam.jpg
     - assets/KIIT.png
     - assets/logo.png

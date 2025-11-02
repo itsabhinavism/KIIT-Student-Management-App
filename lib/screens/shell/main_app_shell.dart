@@ -7,6 +7,7 @@ import '../student/student_fees_screen.dart';
 import '../teacher/teacher_home_screen.dart';
 import '../teacher/teacher_attendance_screen.dart';
 import '../teacher/teacher_profile_screen.dart';
+import '../chat/chat_list_screen.dart';
 
 /// MainAppShell: Role-based navigation shell
 /// Shows different tabs for students vs teachers
@@ -20,17 +21,19 @@ class MainAppShell extends StatefulWidget {
 class _MainAppShellState extends State<MainAppShell> {
   int _selectedIndex = 0;
 
-  // Student screens: Home, Attendance, Fees
+  // Student screens: Home, Attendance, Fees, Chat
   final List<Widget> _studentScreens = [
     const StudentHomeScreen(),
     const StudentAttendanceScreen(),
     const StudentFeesScreen(),
+    const ChatListScreen(),
   ];
 
-  // Teacher screens: Home, Attendance, Profile
+  // Teacher screens: Home, Attendance, Chat, Profile
   final List<Widget> _teacherScreens = [
     const TeacherHomeScreen(),
     const TeacherAttendanceScreen(),
+    const ChatListScreen(),
     const TeacherProfileScreen(),
   ];
 
@@ -83,6 +86,10 @@ class _MainAppShellState extends State<MainAppShell> {
                   icon: Icon(Icons.payment),
                   label: 'Fees',
                 ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.chat_bubble_outline),
+                  label: 'Messages',
+                ),
               ]
             : const [
                 BottomNavigationBarItem(
@@ -92,6 +99,10 @@ class _MainAppShellState extends State<MainAppShell> {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.qr_code_scanner),
                   label: 'Attendance',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.chat_bubble_outline),
+                  label: 'Messages',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.person),

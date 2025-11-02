@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 
 import 'course_model.dart';
+import 'user_model.dart';
 
 /// Schedule item model for timetable
 class ScheduleItem {
@@ -11,6 +12,7 @@ class ScheduleItem {
     required this.endTime,
     required this.section,
     required this.room,
+    this.teacher,
   });
 
   final String id;
@@ -19,6 +21,7 @@ class ScheduleItem {
   final DateTime endTime;
   final Section section;
   final String room;
+  final User? teacher;
 
   static DateTime _parseTime(String timeString) {
     try {
@@ -47,6 +50,7 @@ class ScheduleItem {
       startTime: _parseTime(json['start_time']?.toString() ?? '00:00:00'),
       endTime: _parseTime(json['end_time']?.toString() ?? '00:00:00'),
       room: json['room_number']?.toString() ?? '',
+      teacher: json['teacher'] != null ? User.fromJson(json['teacher']) : null,
     );
   }
 

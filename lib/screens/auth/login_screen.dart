@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 
@@ -46,6 +47,9 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isLoading = false);
         return;
       }
+
+      // Success - Save credentials for autofill
+      TextInput.finishAutofillContext();
 
       // Success - SplashWrapper will handle routing
       if (authProvider.isAuthenticated) {
@@ -103,120 +107,124 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // KIIT Logo
-                      Image.asset(
-                        'assets/KIIT.png',
-                        width: 80,
-                        height: 80,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'KIIT SAP Portal',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                child: AutofillGroup(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // KIIT Logo
+                        Image.asset(
+                          'assets/KIIT.png',
+                          width: 80,
+                          height: 80,
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Sign In',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Email field
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          hintText: 'yourname@kiit.ac.in',
-                          prefixIcon: const Icon(Icons.email),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'KIIT SAP Portal',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        validator: (val) {
-                          if (val == null || val.isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!val.contains('@')) {
-                            return 'Please enter a valid email';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Sign In',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
 
-                      // Password field
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: !_passwordVisible,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _passwordVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
+                        // Email field
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          autofillHints: const [AutofillHints.email],
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            hintText: 'yourname@kiit.ac.in',
+                            prefixIcon: const Icon(Icons.email),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _passwordVisible = !_passwordVisible;
-                              });
-                            },
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          validator: (val) {
+                            if (val == null || val.isEmpty) {
+                              return 'Please enter your email';
+                            }
+                            if (!val.contains('@')) {
+                              return 'Please enter a valid email';
+                            }
+                            return null;
+                          },
                         ),
-                        validator: (val) => val == null || val.isEmpty
-                            ? 'Please enter your password'
-                            : null,
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 16),
 
-                      // Login button
-                      _isLoading
-                          ? const CircularProgressIndicator()
-                          : SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _login,
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
+                        // Password field
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: !_passwordVisible,
+                          autofillHints: const [AutofillHints.password],
+                          decoration: InputDecoration(
+                            labelText: 'Password',
+                            prefixIcon: const Icon(Icons.lock),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _passwordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _passwordVisible = !_passwordVisible;
+                                });
+                              },
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (val) => val == null || val.isEmpty
+                              ? 'Please enter your password'
+                              : null,
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Login button
+                        _isLoading
+                            ? const CircularProgressIndicator()
+                            : SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _login,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                  child: const Text(
+                                    'Login',
+                                    style: TextStyle(fontSize: 16),
                                   ),
-                                ),
-                                child: const Text(
-                                  'Login',
-                                  style: TextStyle(fontSize: 16),
                                 ),
                               ),
-                            ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                      // Sign up link
-                      TextButton(
-                        onPressed: _navigateToSignUp,
-                        child: const Text(
-                          "Don't have an account? Sign Up",
-                          style: TextStyle(color: Colors.blue),
+                        // Sign up link
+                        TextButton(
+                          onPressed: _navigateToSignUp,
+                          child: const Text(
+                            "Don't have an account? Sign Up",
+                            style: TextStyle(color: Colors.blue),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

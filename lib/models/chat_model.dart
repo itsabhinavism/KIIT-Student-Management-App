@@ -1,39 +1,20 @@
-/// Chat room model
+import 'user_model.dart';
+
+/// Chat room model representing a conversation with another user
 class ChatRoom {
   const ChatRoom({
-    required this.id,
-    required this.name,
-    required this.lastMessage,
-    required this.lastMessageTime,
-    required this.unreadCount,
+    required this.roomId,
+    required this.otherParticipant,
   });
 
-  final String id;
-  final String name;
-  final String lastMessage;
-  final DateTime lastMessageTime;
-  final int unreadCount;
+  final String roomId;
+  final User otherParticipant;
 
   factory ChatRoom.fromJson(Map<String, dynamic> json) {
     return ChatRoom(
-      id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      lastMessage: json['last_message']?.toString() ??
-          json['lastMessage']?.toString() ??
-          '',
-      lastMessageTime: DateTime.tryParse(
-              json['last_message_time']?.toString() ??
-                  json['lastMessageTime']?.toString() ??
-                  '') ??
-          DateTime.now(),
-      unreadCount: _parseInt(json['unread_count'] ?? json['unreadCount']),
+      roomId: json['room_id']?.toString() ?? '',
+      otherParticipant: User.fromJson(json['other_participant'] ?? {}),
     );
-  }
-
-  static int _parseInt(dynamic value) {
-    if (value == null) return 0;
-    if (value is int) return value;
-    return int.tryParse(value.toString()) ?? 0;
   }
 }
 
@@ -41,38 +22,35 @@ class ChatRoom {
 class Message {
   const Message({
     required this.id,
-    required this.roomId,
-    required this.senderId,
-    required this.senderName,
     required this.content,
-    required this.timestamp,
-    required this.isOwnMessage,
+    required this.senderId,
+    required this.createdAt,
+    required this.isMine,
+    this.senderName,
   });
 
   final String id;
-  final String roomId;
-  final String senderId;
-  final String senderName;
   final String content;
-  final DateTime timestamp;
-  final bool isOwnMessage;
+  final String senderId;
+  final DateTime createdAt;
+  final bool isMine;
+  final String? senderName;
 
   factory Message.fromJson(Map<String, dynamic> json, {String? currentUserId}) {
+    final senderId = json['sender_id']?.toString() ?? '';
+    final senderData = json['sender'] as Map<String, dynamic>?;
+
+    // Parse UTC time and convert to local timezone (just like schedule.ts does)
+    final utcTime = DateTime.tryParse(json['created_at']?.toString() ?? '');
+    final localTime = utcTime?.toLocal() ?? DateTime.now();
+
     return Message(
       id: json['id']?.toString() ?? '',
-      roomId: json['room_id']?.toString() ?? json['roomId']?.toString() ?? '',
-      senderId:
-          json['sender_id']?.toString() ?? json['senderId']?.toString() ?? '',
-      senderName: json['sender_name']?.toString() ??
-          json['senderName']?.toString() ??
-          '',
       content: json['content']?.toString() ?? '',
-      timestamp: DateTime.tryParse(json['timestamp']?.toString() ??
-              json['created_at']?.toString() ??
-              '') ??
-          DateTime.now(),
-      isOwnMessage: currentUserId != null &&
-          json['sender_id']?.toString() == currentUserId,
+      senderId: senderId,
+      createdAt: localTime,
+      isMine: currentUserId != null && senderId == currentUserId,
+      senderName: senderData?['full_name']?.toString(),
     );
   }
 }
