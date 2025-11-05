@@ -25,6 +25,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _token != null && _user != null;
+  ApiService get apiService => _apiService;
 
   /// Initialize auth state on app startup
   Future<void> initialize() async {
@@ -161,5 +162,44 @@ class AuthProvider extends ChangeNotifier {
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
+  }
+
+  /// Upload new avatar to Supabase Storage and update user profile
+  /// Accepts Uint8List (bytes from XFile.readAsBytes())
+  Future<void> uploadNewAvatar(Uint8List imageBytes, String fileName) async {
+    if (_user == null) throw Exception('No user logged in');
+
+    try {
+      // Extract file extension from fileName
+      final fileExtension = fileName.split('.').last.toLowerCase();
+      final filePath = '${_user!.id}/avatar.$fileExtension';
+
+      // Upload to Supabase Storage as binary data
+      await _supabaseClient.storage.from('avatars').uploadBinary(
+            filePath,
+            imageBytes,
+            fileOptions: const FileOptions(
+              cacheControl: '3600',
+              upsert: true,
+              contentType: 'image/*',
+            ),
+          );
+
+      // Get public URL with cache-buster
+      final publicUrl =
+          _supabaseClient.storage.from('avatars').getPublicUrl(filePath);
+      final urlWithCacheBuster =
+          '$publicUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+
+      // Update database via Hono API
+      final newUrl = await _apiService.updateUserAvatar(urlWithCacheBuster);
+
+      // Update local state
+      _user!.avatarUrl = newUrl;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Avatar upload error: $e');
+      rethrow;
+    }
   }
 }

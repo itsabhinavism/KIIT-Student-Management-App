@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/chat_model.dart';
 import '../../services/api_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/app_drawer.dart';
 import 'chat_screen.dart';
 import 'start_chat_screen.dart';
 
@@ -34,6 +35,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     final isStudent = authProvider.user?.role == 'student';
 
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('Messages'),
         backgroundColor: Colors.blue.shade700,

@@ -12,6 +12,7 @@ class ScheduleItem {
     required this.endTime,
     required this.section,
     required this.room,
+    required this.day,
     this.teacher,
   });
 
@@ -21,6 +22,7 @@ class ScheduleItem {
   final DateTime endTime;
   final Section section;
   final String room;
+  final String day;
   final User? teacher;
 
   static DateTime _parseTime(String timeString) {
@@ -50,6 +52,7 @@ class ScheduleItem {
       startTime: _parseTime(json['start_time']?.toString() ?? '00:00:00'),
       endTime: _parseTime(json['end_time']?.toString() ?? '00:00:00'),
       room: json['room_number']?.toString() ?? '',
+      day: json['day']?.toString() ?? '',
       teacher: json['teacher'] != null ? User.fromJson(json['teacher']) : null,
     );
   }
@@ -61,6 +64,11 @@ class ScheduleItem {
   String get formattedEndTime {
     return DateFormat.jm().format(endTime);
   }
+
+  String get courseName => course.name;
+  String get courseCode => course.code;
+  String get teacherName => teacher?.fullName ?? 'TBA';
+  String get roomNumber => room;
 }
 
 /// Section model

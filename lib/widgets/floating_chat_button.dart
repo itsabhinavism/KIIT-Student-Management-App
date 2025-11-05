@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
-import '../screens/chatbot_screen_enhanced.dart';
-import '../main.dart';
+import '../screens/chatbot/ai_chat_screen.dart';
 
 // Notifier to manage the floating button position and visibility
 class FloatingButtonPositionNotifier extends ChangeNotifier {
-  Offset _position = const Offset(20, 100); // Default position
+  Offset _position = const Offset(20, 20); // Bottom-left position
   bool _isVisible = true;
 
   Offset get position => _position;
@@ -61,20 +60,12 @@ class _FloatingChatButtonState extends State<FloatingChatButton>
       _animationController.reverse();
     });
 
-    // Hide the floating button
-    context.read<FloatingButtonPositionNotifier>().setVisibility(false);
-
-    // Use the global navigator key to push the route
-    navigatorKey.currentState?.push(
+    // Navigate to AI chat screen
+    Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const ChatBotScreenEnhanced(),
+        builder: (context) => const AiChatScreen(),
       ),
-    ).then((_) {
-      // Show the button again when returning from chat
-      if (mounted) {
-        context.read<FloatingButtonPositionNotifier>().setVisibility(true);
-      }
-    });
+    );
   }
 
   @override
@@ -92,8 +83,8 @@ class _FloatingChatButtonState extends State<FloatingChatButton>
     }
 
     return Positioned(
-      left: position.dx,
-      top: position.dy,
+      right: position.dx, // Changed from left to right
+      bottom: position.dy,
       child: GestureDetector(
         onPanStart: (details) {
           _isDragging = false;
@@ -102,24 +93,31 @@ class _FloatingChatButtonState extends State<FloatingChatButton>
         onPanUpdate: (details) {
           // Mark as dragging if moved more than 5 pixels
           if (!_isDragging && _dragStartPosition != null) {
-            final distance = (details.globalPosition - _dragStartPosition!).distance;
+            final distance =
+                (details.globalPosition - _dragStartPosition!).distance;
             if (distance > 5) {
               _isDragging = true;
             }
           }
-          
+
           if (_isDragging) {
+            // Calculate new position from bottom
+            final currentBottom = screenSize.height - position.dy - 60;
+            final newBottom = currentBottom - details.delta.dy;
+
             final newPosition = Offset(
               (position.dx + details.delta.dx).clamp(
                 0.0,
                 screenSize.width - 60,
               ),
-              (position.dy + details.delta.dy).clamp(
+              (screenSize.height - newBottom - 60).clamp(
                 0.0,
                 screenSize.height - 60,
               ),
             );
-            context.read<FloatingButtonPositionNotifier>().updatePosition(newPosition);
+            context
+                .read<FloatingButtonPositionNotifier>()
+                .updatePosition(newPosition);
           }
         },
         onPanEnd: (details) {
@@ -155,7 +153,7 @@ class _FloatingChatButtonState extends State<FloatingChatButton>
             ),
             child: Stack(
               children: [
-                Center(
+                const Center(
                   child: Icon(
                     Icons.smart_toy,
                     color: Colors.white,

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/app_drawer.dart';
+import '../../widgets/floating_chat_button.dart';
 import '../student/student_home_screen.dart';
 import '../student/student_attendance_screen.dart';
-import '../student/student_fees_screen.dart';
+import '../full_schedule_screen.dart';
 import '../teacher/teacher_home_screen.dart';
 import '../teacher/teacher_attendance_screen.dart';
-import '../teacher/teacher_profile_screen.dart';
 import '../chat/chat_list_screen.dart';
 
 /// MainAppShell: Role-based navigation shell
@@ -21,20 +22,20 @@ class MainAppShell extends StatefulWidget {
 class _MainAppShellState extends State<MainAppShell> {
   int _selectedIndex = 0;
 
-  // Student screens: Home, Attendance, Fees, Chat
+  // Student screens: Home, Schedule, Attendance, Messages
   final List<Widget> _studentScreens = [
     const StudentHomeScreen(),
+    const FullScheduleScreen(),
     const StudentAttendanceScreen(),
-    const StudentFeesScreen(),
     const ChatListScreen(),
   ];
 
-  // Teacher screens: Home, Attendance, Chat, Profile
+  // Teacher screens: Home, Schedule, Attendance, Messages
   final List<Widget> _teacherScreens = [
     const TeacherHomeScreen(),
+    const FullScheduleScreen(),
     const TeacherAttendanceScreen(),
     const ChatListScreen(),
-    const TeacherProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -62,9 +63,16 @@ class _MainAppShellState extends State<MainAppShell> {
     final screens = isStudent ? _studentScreens : _teacherScreens;
 
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: screens,
+      drawer: const AppDrawer(),
+      body: Stack(
+        children: [
+          IndexedStack(
+            index: _selectedIndex,
+            children: screens,
+          ),
+          // Show floating AI button only for students
+          if (isStudent) const FloatingChatButton(),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -79,12 +87,12 @@ class _MainAppShellState extends State<MainAppShell> {
                   label: 'Home',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.calendar_today),
-                  label: 'Attendance',
+                  icon: Icon(Icons.calendar_month),
+                  label: 'Schedule',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.payment),
-                  label: 'Fees',
+                  icon: Icon(Icons.qr_code),
+                  label: 'Attendance',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.chat_bubble_outline),
@@ -97,16 +105,16 @@ class _MainAppShellState extends State<MainAppShell> {
                   label: 'Home',
                 ),
                 BottomNavigationBarItem(
+                  icon: Icon(Icons.calendar_month),
+                  label: 'Schedule',
+                ),
+                BottomNavigationBarItem(
                   icon: Icon(Icons.qr_code_scanner),
                   label: 'Attendance',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.chat_bubble_outline),
                   label: 'Messages',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
-                  label: 'Profile',
                 ),
               ],
       ),

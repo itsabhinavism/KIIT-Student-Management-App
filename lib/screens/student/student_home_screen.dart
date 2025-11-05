@@ -4,6 +4,7 @@ import '../../models/schedule_model.dart';
 import '../../models/course_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+import '../../widgets/app_drawer.dart';
 import '../chat/chat_screen.dart';
 
 /// StudentHomeScreen: Dashboard for students showing today's schedule and enrollments
@@ -69,19 +70,19 @@ class StudentHomeScreen extends StatelessWidget {
     }
 
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('Home'),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await authProvider.signOut();
-              if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/login');
-              }
-            },
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Image.asset(
+              'assets/KIIT.png',
+              height: 40,
+              fit: BoxFit.contain,
+            ),
           ),
         ],
       ),

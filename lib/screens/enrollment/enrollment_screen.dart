@@ -250,7 +250,7 @@ class _EnrollmentScreenState extends State<EnrollmentScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  section.code,
+                                                  section.displayName,
                                                   style: const TextStyle(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.bold,
@@ -258,7 +258,7 @@ class _EnrollmentScreenState extends State<EnrollmentScreen> {
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
-                                                  section.name,
+                                                  'Year ${section.year} • Semester ${section.semester}',
                                                   style: TextStyle(
                                                     fontSize: 14,
                                                     color: Colors.grey.shade600,
@@ -280,34 +280,18 @@ class _EnrollmentScreenState extends State<EnrollmentScreen> {
                                       Row(
                                         children: [
                                           Icon(
-                                            Icons.person,
+                                            Icons.event_seat,
                                             size: 16,
                                             color: Colors.grey.shade600,
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            section.instructorName,
+                                            section.availableSeats,
                                             style: TextStyle(
                                               fontSize: 13,
                                               color: Colors.grey.shade600,
                                             ),
                                           ),
-                                          if (section.schedule != null) ...[
-                                            const SizedBox(width: 16),
-                                            Icon(
-                                              Icons.schedule,
-                                              size: 16,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              section.schedule!,
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                color: Colors.grey.shade600,
-                                              ),
-                                            ),
-                                          ],
                                         ],
                                       ),
                                     ],

@@ -2,27 +2,34 @@
 class Section {
   const Section({
     required this.id,
-    required this.code,
-    required this.name,
-    required this.instructorName,
-    this.schedule,
+    required this.sectionName,
+    required this.year,
+    required this.branch,
+    required this.semester,
+    required this.seatLimit,
+    required this.seatsFilled,
   });
 
   final String id;
-  final String code;
-  final String name;
-  final String instructorName;
-  final String? schedule;
+  final String sectionName;
+  final int year;
+  final String branch;
+  final int semester;
+  final int seatLimit;
+  final int seatsFilled;
+
+  String get displayName => '$branch-$year ($sectionName)';
+  String get availableSeats => '${seatLimit - seatsFilled}/$seatLimit seats';
 
   factory Section.fromJson(Map<String, dynamic> json) {
     return Section(
       id: json['id']?.toString() ?? '',
-      code: json['code']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      instructorName: json['instructor_name']?.toString() ??
-          json['instructorName']?.toString() ??
-          '',
-      schedule: json['schedule']?.toString(),
+      sectionName: json['section_name']?.toString() ?? '',
+      year: json['year'] ?? 0,
+      branch: json['branch']?.toString() ?? '',
+      semester: json['semester'] ?? 0,
+      seatLimit: json['seat_limit'] ?? 0,
+      seatsFilled: json['seats_filled'] ?? 0,
     );
   }
 }

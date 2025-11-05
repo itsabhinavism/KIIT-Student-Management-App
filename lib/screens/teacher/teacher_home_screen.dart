@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/schedule_model.dart';
 import '../../services/api_service.dart';
+import '../../widgets/app_drawer.dart';
 
 /// TeacherHomeScreen: Dashboard for teachers showing today's schedule
 class TeacherHomeScreen extends StatelessWidget {
@@ -20,19 +21,19 @@ class TeacherHomeScreen extends StatelessWidget {
     }
 
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('Home'),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await authProvider.signOut();
-              if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/login');
-              }
-            },
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Image.asset(
+              'assets/KIIT.png',
+              height: 40,
+              fit: BoxFit.contain,
+            ),
           ),
         ],
       ),
@@ -64,11 +65,16 @@ class TeacherHomeScreen extends StatelessWidget {
                         CircleAvatar(
                           radius: 32,
                           backgroundColor: Colors.white,
-                          child: Icon(
-                            Icons.person,
-                            size: 32,
-                            color: Colors.blue.shade700,
-                          ),
+                          backgroundImage: user.avatarUrl != null
+                              ? NetworkImage(user.avatarUrl!)
+                              : null,
+                          child: user.avatarUrl == null
+                              ? Icon(
+                                  Icons.person,
+                                  size: 32,
+                                  color: Colors.blue.shade700,
+                                )
+                              : null,
                         ),
                         const SizedBox(width: 16),
                         Expanded(

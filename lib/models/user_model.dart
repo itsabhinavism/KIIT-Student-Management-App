@@ -1,11 +1,12 @@
 /// User model representing authenticated user data from API
 class User {
-  const User({
+  User({
     required this.id,
     required this.email,
     required this.fullName,
     required this.role,
     this.rollNo,
+    this.avatarUrl,
   });
 
   final String id;
@@ -13,6 +14,7 @@ class User {
   final String fullName;
   final String role; // 'student' or 'teacher'
   final String? rollNo;
+  String? avatarUrl;
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -22,6 +24,7 @@ class User {
           json['full_name']?.toString() ?? json['fullName']?.toString() ?? '',
       role: json['role']?.toString() ?? 'student',
       rollNo: json['roll_no']?.toString() ?? json['rollNo']?.toString(),
+      avatarUrl: json['avatar_url']?.toString(),
     );
   }
 
@@ -32,6 +35,7 @@ class User {
       'full_name': fullName,
       'role': role,
       if (rollNo != null) 'roll_no': rollNo,
+      if (avatarUrl != null) 'avatar_url': avatarUrl,
     };
   }
 }

@@ -81,8 +81,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
             callback: (payload) {
               // This code will now run!
-              print('Realtime message received: ${payload.newRecord}');
-
               final newMessage = Message.fromJson(
                 payload.newRecord,
                 currentUserId: _currentUserId,
@@ -91,7 +89,6 @@ class _ChatScreenState extends State<ChatScreen> {
               if (mounted) {
                 setState(() {
                   _messages.add(newMessage);
-                  print('Added message to UI: ${newMessage.id}');
                 });
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   _scrollToBottom();
@@ -304,7 +301,7 @@ class _ChatScreenState extends State<ChatScreen> {
           BoxShadow(
             offset: const Offset(0, -1),
             blurRadius: 4,
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
           ),
         ],
       ),

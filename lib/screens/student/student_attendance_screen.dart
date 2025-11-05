@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/attendance_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+import '../../widgets/app_drawer.dart';
 import '../qr_scanner_screen.dart';
 
 /// StudentAttendanceScreen: Shows attendance summary and QR scanning
@@ -20,6 +21,7 @@ class StudentAttendanceScreen extends StatelessWidget {
     }
 
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('Attendance'),
         backgroundColor: Colors.blue.shade700,

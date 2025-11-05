@@ -4,6 +4,7 @@ import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../services/api_service.dart';
 import '../../models/schedule_model.dart'; // We need this model
+import '../../widgets/app_drawer.dart';
 
 /// TeacherAttendanceScreen: Generate QR codes for attendance
 class TeacherAttendanceScreen extends StatefulWidget {
@@ -170,6 +171,8 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
                   ),
                   const SizedBox(height: 16),
                   Container(
+                    width: 280,
+                    height: 280,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -248,6 +251,7 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
   Widget build(BuildContext context) {
     final apiService = context.read<ApiService>();
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('Start Attendance Session'),
         backgroundColor: Colors.blue.shade700,

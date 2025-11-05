@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/fee_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+import '../../widgets/app_drawer.dart';
 import 'package:intl/intl.dart';
 
 /// StudentFeesScreen: Shows fee summary and individual fee items
@@ -20,6 +21,7 @@ class StudentFeesScreen extends StatelessWidget {
     }
 
     return Scaffold(
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('Fees'),
         backgroundColor: Colors.blue.shade700,

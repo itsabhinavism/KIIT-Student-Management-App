@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/user_model.dart';
@@ -9,6 +10,9 @@ import '../models/fee_model.dart';
 import '../models/attendance_model.dart';
 import '../models/chat_model.dart';
 import '../models/course_model.dart';
+import '../models/grade_model.dart';
+import '../models/notice_model.dart';
+import '../models/teaching_section_model.dart';
 
 /// ApiService: The "Brain" - Handles all HTTP communication with Hono.js backend
 /// This is a plain Dart class (not a ChangeNotifier)
@@ -51,6 +55,26 @@ class ApiService {
     return User.fromJson(data);
   }
 
+  /// DELETE /users/me/reset - Resets student data for testing
+  Future<void> resetMyAccount() async {
+    final response = await http.delete(
+      Uri.parse('$_baseUrl/users/me/reset'),
+      headers: _headers,
+    );
+    _handleResponse(response);
+  }
+
+  /// POST /users/me/avatar - Update user's avatar URL
+  Future<String> updateUserAvatar(String avatarUrl) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/users/me/avatar'),
+      headers: _headers,
+      body: jsonEncode({'avatar_url': avatarUrl}),
+    );
+    final data = _handleResponse(response);
+    return data['avatar_url'];
+  }
+
   // ============= ENROLLMENT ENDPOINTS =============
 
   /// GET /enrollments/my - Get user's enrollments
@@ -82,6 +106,16 @@ class ApiService {
     return data.map((json) => Section.fromJson(json)).toList();
   }
 
+  /// GET /teacher/my-sections - Get all sections a teacher teaches
+  Future<List<TeachingSection>> getMyTeachingSections() async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/teacher/my-sections'),
+      headers: _headers,
+    );
+    final data = _handleResponse(response) as List;
+    return data.map((json) => TeachingSection.fromJson(json)).toList();
+  }
+
   /// POST /sections/:sectionId/enroll - Enroll in a section
   Future<void> enrollInSection(String sectionId) async {
     final response = await http.post(
@@ -101,6 +135,28 @@ class ApiService {
     );
     final data = _handleResponse(response) as List;
     return data.map((json) => ScheduleItem.fromJson(json)).toList();
+  }
+
+  /// GET /schedule/full - Get full weekly schedule
+  Future<List<ScheduleItem>> getFullSchedule() async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/schedule/full'),
+      headers: _headers,
+    );
+    final data = _handleResponse(response) as List;
+    return data.map((json) => ScheduleItem.fromJson(json)).toList();
+  }
+
+  // ============= GRADE ENDPOINTS =============
+
+  /// GET /grades - Get all grades
+  Future<List<Grade>> getMyGrades() async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/grades'),
+      headers: _headers,
+    );
+    final data = _handleResponse(response) as List;
+    return data.map((json) => Grade.fromJson(json)).toList();
   }
 
   // ============= FEE ENDPOINTS =============
@@ -236,5 +292,86 @@ class ApiService {
       body: jsonEncode({'content': content}),
     );
     _handleResponse(response);
+  }
+
+  // ============= NOTICE/EVENT ENDPOINTS =============
+
+  /// GET /notices - Get user's notice feed (RLS automatically filters)
+  Future<List<Notice>> getNotices() async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/notices'),
+      headers: _headers,
+    );
+    final data = _handleResponse(response) as List;
+    return data.map((json) => Notice.fromJson(json)).toList();
+  }
+
+  /// POST /notices - Create a new notice or event
+  Future<void> createNotice({
+    required String title,
+    required String description,
+    required String type,
+    required String scope,
+    String? sectionId,
+    String? registrationLink,
+  }) async {
+    final body = <String, dynamic>{
+      'title': title,
+      'description': description,
+      'type': type,
+      'scope': scope,
+      if (sectionId != null) 'section_id': sectionId,
+      if (registrationLink != null) 'registration_link': registrationLink,
+    };
+
+    final response = await http.post(
+      Uri.parse('$_baseUrl/notices'),
+      headers: _headers,
+      body: jsonEncode(body),
+    );
+    _handleResponse(response);
+  }
+
+  // ============= AI ENDPOINTS =============
+
+  /// POST /ai/chat - Chat with AI assistant
+  Future<String> askAiChat(List<Map<String, String>> messages) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/ai/chat'),
+      headers: _headers,
+      body: jsonEncode({'messages': messages}),
+    );
+    final data = _handleResponse(response);
+    return data['response'];
+  }
+
+  /// POST /ai/review-resume - Upload PDF resume for AI review
+  Future<String> reviewResume(File resumeFile) async {
+    // Create a Multipart request
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$_baseUrl/ai/review-resume'),
+    );
+
+    // Add authorization header
+    if (_token != null) {
+      request.headers['Authorization'] = 'Bearer $_token';
+    }
+
+    // Add the file
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'resume_file', // Must match backend key
+        resumeFile.path,
+      ),
+    );
+
+    // Send the request
+    var streamedResponse = await request.send();
+
+    // Get the response
+    var response = await http.Response.fromStream(streamedResponse);
+    final data = _handleResponse(response);
+    return data['response'];
   }
 }

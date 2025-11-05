@@ -116,10 +116,37 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final errorText = e.toString().replaceAll('Exception: ', '');
+
+        // Parse specific errors
+        IconData errorIcon;
+        Color errorColor;
+        String userFriendlyMessage;
+
+        if (errorText.toLowerCase().contains('already marked')) {
+          errorIcon = Icons.check_circle_outline;
+          errorColor = Colors.orange;
+          userFriendlyMessage = 'Attendance already marked for this session';
+        } else if (errorText.toLowerCase().contains('too far')) {
+          errorIcon = Icons.location_off;
+          errorColor = Colors.red;
+          userFriendlyMessage = 'You are too far from the classroom';
+        } else if (errorText.toLowerCase().contains('token expired') ||
+            errorText.toLowerCase().contains('session expired')) {
+          errorIcon = Icons.timer_off;
+          errorColor = Colors.red;
+          userFriendlyMessage = 'QR code has expired. Ask teacher for new code';
+        } else {
+          errorIcon = Icons.error;
+          errorColor = Colors.red;
+          userFriendlyMessage =
+              errorText.isEmpty ? 'Failed to mark attendance' : errorText;
+        }
+
         setState(() {
           attendanceMarked = false;
           isProcessing = false;
-          errorMessage = e.toString().replaceAll('Exception: ', '');
+          errorMessage = userFriendlyMessage;
         });
 
         // Show error message
@@ -127,17 +154,17 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.error, color: Colors.white),
+                Icon(errorIcon, color: Colors.white),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    errorMessage ?? 'Failed to mark attendance',
+                    userFriendlyMessage,
                     style: const TextStyle(fontSize: 16),
                   ),
                 ),
               ],
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: errorColor,
             duration: const Duration(seconds: 4),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -599,6 +626,26 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   }
 
   Widget _buildErrorView(bool isDarkMode) {
+    // Determine icon and color based on error type
+    IconData errorIcon = Icons.error;
+    Color errorColor = Colors.red;
+    String errorTitle = 'Attendance Failed';
+
+    final errorLower = errorMessage?.toLowerCase() ?? '';
+    if (errorLower.contains('already marked')) {
+      errorIcon = Icons.check_circle_outline;
+      errorColor = Colors.orange;
+      errorTitle = 'Already Marked';
+    } else if (errorLower.contains('too far')) {
+      errorIcon = Icons.location_off;
+      errorColor = Colors.red;
+      errorTitle = 'Out of Range';
+    } else if (errorLower.contains('expired')) {
+      errorIcon = Icons.timer_off;
+      errorColor = Colors.red;
+      errorTitle = 'QR Code Expired';
+    }
+
     return Container(
       color: isDarkMode ? Colors.grey[900] : Colors.white,
       padding: const EdgeInsets.all(24),
@@ -617,12 +664,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: errorColor.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.error,
-                    color: Colors.red,
+                  child: Icon(
+                    errorIcon,
+                    color: errorColor,
                     size: 80,
                   ),
                 ),
@@ -633,7 +680,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           const SizedBox(height: 32),
 
           Text(
-            'Attendance Failed',
+            errorTitle,
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
