@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../providers/auth_provider.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
 
@@ -14,6 +16,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
+  final List<File> _attachedFiles = [];
   bool _isLoading = false;
 
   @override
@@ -35,20 +38,55 @@ class _AiChatScreenState extends State<AiChatScreen> {
     }
   }
 
+  Future<void> _pickFiles() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif'],
+      );
+
+      if (result != null) {
+        setState(() {
+          _attachedFiles.addAll(
+            result.paths.map((path) => File(path!)).toList(),
+          );
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking files: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  void _removeFile(int index) {
+    setState(() {
+      _attachedFiles.removeAt(index);
+    });
+  }
+
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
-    if (text.isEmpty || _isLoading) return;
+    if ((text.isEmpty && _attachedFiles.isEmpty) || _isLoading) return;
+
+    // Create a copy of attached files for this message
+    final messageFiles = List<File>.from(_attachedFiles);
 
     final userMessage = ChatMessage(
       role: 'user',
-      content: text,
+      content: text.isNotEmpty ? text : '📎 Attached files',
       timestamp: DateTime.now(),
+      attachedFiles: messageFiles.isNotEmpty ? messageFiles : null,
     );
 
     setState(() {
       _messages.add(userMessage);
       _isLoading = true;
       _messageController.clear();
+      _attachedFiles.clear(); // Clear after sending
     });
 
     _scrollToBottom();
@@ -62,7 +100,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
           .map((msg) => {'role': msg.role, 'content': msg.content})
           .toList();
 
-      final response = await apiService.askAiChat(apiMessages);
+      // Send with attached files
+      final response = await apiService.askAiChat(
+        apiMessages,
+        attachedFiles: messageFiles.isNotEmpty ? messageFiles : null,
+      );
 
       final assistantMessage = ChatMessage(
         role: 'assistant',
@@ -126,6 +168,15 @@ class _AiChatScreenState extends State<AiChatScreen> {
                             color: Colors.grey[500],
                           ),
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'You can also attach images or PDFs! 📎',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
                       ],
                     ),
                   )
@@ -172,31 +223,74 @@ class _AiChatScreenState extends State<AiChatScreen> {
               ],
             ),
             child: SafeArea(
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: InputDecoration(
-                        hintText: 'Ask me anything...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                  // Show attached files
+                  if (_attachedFiles.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _attachedFiles.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final file = entry.value;
+                          final fileName = file.path.split('/').last;
+                          final isImage =
+                              fileName.toLowerCase().endsWith('.jpg') ||
+                                  fileName.toLowerCase().endsWith('.jpeg') ||
+                                  fileName.toLowerCase().endsWith('.png') ||
+                                  fileName.toLowerCase().endsWith('.gif');
+
+                          return Chip(
+                            avatar: Icon(
+                              isImage ? Icons.image : Icons.picture_as_pdf,
+                              size: 18,
+                            ),
+                            label: Text(
+                              fileName,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            deleteIcon: const Icon(Icons.close, size: 18),
+                            onDeleted: () => _removeFile(index),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  // Input row
+                  Row(
+                    children: [
+                      // Attach file button
+                      IconButton(
+                        icon: const Icon(Icons.attach_file),
+                        onPressed: _isLoading ? null : _pickFiles,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          decoration: InputDecoration(
+                            hintText: 'Ask me anything...',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          maxLines: null,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _sendMessage(),
                         ),
                       ),
-                      maxLines: null,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _sendMessage(),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: _sendMessage,
-                    color: Theme.of(context).colorScheme.primary,
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: _sendMessage,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -232,18 +326,67 @@ class _MessageBubble extends StatelessWidget {
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isUser ? Colors.blue[500] : Colors.grey[200],
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: GptMarkdown(
-                message.content,
-                style: TextStyle(
-                  color: isUser ? Colors.white : Colors.black87,
+            child: Column(
+              crossAxisAlignment:
+                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                // Show attached files if present
+                if (message.attachedFiles != null &&
+                    message.attachedFiles!.isNotEmpty) ...[
+                  ...message.attachedFiles!.map((file) {
+                    final fileName = file.path.split('/').last;
+                    final isImage = fileName.toLowerCase().endsWith('.jpg') ||
+                        fileName.toLowerCase().endsWith('.jpeg') ||
+                        fileName.toLowerCase().endsWith('.png') ||
+                        fileName.toLowerCase().endsWith('.gif');
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 4),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isUser ? Colors.blue[400] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isImage ? Icons.image : Icons.picture_as_pdf,
+                            color: isUser ? Colors.white : Colors.black87,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              fileName,
+                              style: TextStyle(
+                                color: isUser ? Colors.white : Colors.black87,
+                                fontSize: 12,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 4),
+                ],
+                // Message content
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isUser ? Colors.blue[500] : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: GptMarkdown(
+                    message.content,
+                    style: TextStyle(
+                      color: isUser ? Colors.white : Colors.black87,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
           if (isUser) ...[
@@ -263,10 +406,12 @@ class ChatMessage {
   final String role;
   final String content;
   final DateTime timestamp;
+  final List<File>? attachedFiles;
 
   ChatMessage({
     required this.role,
     required this.content,
     required this.timestamp,
+    this.attachedFiles,
   });
 }

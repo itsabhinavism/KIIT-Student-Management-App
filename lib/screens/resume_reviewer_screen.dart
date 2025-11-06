@@ -69,6 +69,8 @@ class _ResumeReviewerScreenState extends State<ResumeReviewerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Resume Reviewer'),
@@ -81,33 +83,39 @@ class _ResumeReviewerScreenState extends State<ResumeReviewerScreen> {
           children: [
             // Info card
             Card(
-              color: Colors.blue[50],
-              child: const Padding(
-                padding: EdgeInsets.all(16.0),
+              color: isDarkMode ? Colors.blue[900] : Colors.blue[50],
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info_outline, color: Colors.blue),
-                        SizedBox(width: 8),
+                        Icon(
+                          Icons.info_outline,
+                          color: isDarkMode ? Colors.blue[300] : Colors.blue,
+                        ),
+                        const SizedBox(width: 8),
                         Text(
                           'How it works',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue,
+                            color: isDarkMode ? Colors.blue[300] : Colors.blue,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       'Pick your resume below and our AI will provide:\n'
                       '• A quick summary\n'
                       '• Three key strengths\n'
                       '• Three areas for improvement',
-                      style: TextStyle(fontSize: 14),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDarkMode ? Colors.grey[300] : Colors.black87,
+                      ),
                     ),
                   ],
                 ),
@@ -171,13 +179,18 @@ class _ResumeReviewerScreenState extends State<ResumeReviewerScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
+                  border: Border.all(
+                    color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                  ),
                 ),
                 child: GptMarkdown(
                   _feedback!,
-                  style: const TextStyle(fontSize: 14),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDarkMode ? Colors.grey[300] : Colors.black87,
+                  ),
                 ),
               ),
             ],

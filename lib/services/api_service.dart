@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 import '../config/app_config.dart';
 import '../models/user_model.dart';
 import '../models/section_model.dart';
@@ -40,6 +42,27 @@ class ApiService {
       final error = response.body.isNotEmpty ? jsonDecode(response.body) : {};
       throw Exception(error['message'] ??
           'Request failed with status ${response.statusCode}');
+    }
+  }
+
+  /// Helper method to get MIME type from file path
+  String _getMimeType(String filePath) {
+    final extension = filePath.toLowerCase().split('.').last;
+    switch (extension) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      default:
+        // Try to use mime package as fallback
+        return lookupMimeType(filePath) ?? 'application/octet-stream';
     }
   }
 
@@ -334,15 +357,56 @@ class ApiService {
 
   // ============= AI ENDPOINTS =============
 
-  /// POST /ai/chat - Chat with AI assistant
-  Future<String> askAiChat(List<Map<String, String>> messages) async {
-    final response = await http.post(
-      Uri.parse('$_baseUrl/ai/chat'),
-      headers: _headers,
-      body: jsonEncode({'messages': messages}),
-    );
-    final data = _handleResponse(response);
-    return data['response'];
+  /// POST /ai/chat - Chat with AI assistant (with optional file attachments)
+  Future<String> askAiChat(
+    List<Map<String, String>> messages, {
+    List<File>? attachedFiles,
+  }) async {
+    if (attachedFiles != null && attachedFiles.isNotEmpty) {
+      // Use multipart request when files are attached
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_baseUrl/ai/chat'),
+      );
+
+      // Add authorization header
+      if (_token != null) {
+        request.headers['Authorization'] = 'Bearer $_token';
+      }
+
+      // Add messages as a field
+      request.fields['messages'] = jsonEncode(messages);
+
+      // Add files with correct MIME types
+      for (int i = 0; i < attachedFiles.length; i++) {
+        final file = attachedFiles[i];
+        final mimeType = _getMimeType(file.path);
+        final mediaType = MediaType.parse(mimeType);
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'file_$i',
+            file.path,
+            contentType: mediaType,
+          ),
+        );
+      }
+
+      // Send the request
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+      final data = _handleResponse(response);
+      return data['response'];
+    } else {
+      // Use regular JSON request when no files
+      final response = await http.post(
+        Uri.parse('$_baseUrl/ai/chat'),
+        headers: _headers,
+        body: jsonEncode({'messages': messages}),
+      );
+      final data = _handleResponse(response);
+      return data['response'];
+    }
   }
 
   /// POST /ai/review-resume - Upload PDF resume for AI review
@@ -358,11 +422,15 @@ class ApiService {
       request.headers['Authorization'] = 'Bearer $_token';
     }
 
-    // Add the file
+    // Add the file with correct MIME type
+    final mimeType = _getMimeType(resumeFile.path);
+    final mediaType = MediaType.parse(mimeType);
+
     request.files.add(
       await http.MultipartFile.fromPath(
         'resume_file', // Must match backend key
         resumeFile.path,
+        contentType: mediaType,
       ),
     );
 
