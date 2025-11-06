@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/section_model.dart';
 import '../../services/api_service.dart';
+import '../../widgets/kiit_logo_widget.dart';
 
 /// EnrollmentScreen: Mandatory first-time screen for students
 /// Allows students to enroll in available course sections
@@ -60,6 +61,9 @@ class _EnrollmentScreenState extends State<EnrollmentScreen> {
         automaticallyImplyLeading: false, // Prevent going back
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(

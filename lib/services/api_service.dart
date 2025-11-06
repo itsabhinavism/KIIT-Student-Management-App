@@ -1,8 +1,9 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+import 'package:file_picker/file_picker.dart';
 import '../config/app_config.dart';
 import '../models/user_model.dart';
 import '../models/section_model.dart';
@@ -360,7 +361,7 @@ class ApiService {
   /// POST /ai/chat - Chat with AI assistant (with optional file attachments)
   Future<String> askAiChat(
     List<Map<String, String>> messages, {
-    List<File>? attachedFiles,
+    List<PlatformFile>? attachedFiles,
   }) async {
     if (attachedFiles != null && attachedFiles.isNotEmpty) {
       // Use multipart request when files are attached
@@ -380,16 +381,37 @@ class ApiService {
       // Add files with correct MIME types
       for (int i = 0; i < attachedFiles.length; i++) {
         final file = attachedFiles[i];
-        final mimeType = _getMimeType(file.path);
-        final mediaType = MediaType.parse(mimeType);
-
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'file_$i',
-            file.path,
-            contentType: mediaType,
-          ),
-        );
+        
+        if (kIsWeb) {
+          // For web, use bytes directly
+          if (file.bytes != null) {
+            final mimeType = _getMimeType(file.name);
+            final mediaType = MediaType.parse(mimeType);
+            
+            request.files.add(
+              http.MultipartFile.fromBytes(
+                'file_$i',
+                file.bytes!,
+                filename: file.name,
+                contentType: mediaType,
+              ),
+            );
+          }
+        } else {
+          // For mobile/desktop, use file path
+          if (file.path != null) {
+            final mimeType = _getMimeType(file.path!);
+            final mediaType = MediaType.parse(mimeType);
+            
+            request.files.add(
+              await http.MultipartFile.fromPath(
+                'file_$i',
+                file.path!,
+                contentType: mediaType,
+              ),
+            );
+          }
+        }
       }
 
       // Send the request
@@ -410,7 +432,7 @@ class ApiService {
   }
 
   /// POST /ai/review-resume - Upload PDF resume for AI review
-  Future<String> reviewResume(File resumeFile) async {
+  Future<String> reviewResume(PlatformFile resumeFile) async {
     // Create a Multipart request
     var request = http.MultipartRequest(
       'POST',
@@ -423,16 +445,36 @@ class ApiService {
     }
 
     // Add the file with correct MIME type
-    final mimeType = _getMimeType(resumeFile.path);
-    final mediaType = MediaType.parse(mimeType);
+    if (kIsWeb) {
+      // For web, use bytes directly
+      if (resumeFile.bytes != null) {
+        final mimeType = _getMimeType(resumeFile.name);
+        final mediaType = MediaType.parse(mimeType);
 
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'resume_file', // Must match backend key
-        resumeFile.path,
-        contentType: mediaType,
-      ),
-    );
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'resume_file', // Must match backend key
+            resumeFile.bytes!,
+            filename: resumeFile.name,
+            contentType: mediaType,
+          ),
+        );
+      }
+    } else {
+      // For mobile/desktop, use file path
+      if (resumeFile.path != null) {
+        final mimeType = _getMimeType(resumeFile.path!);
+        final mediaType = MediaType.parse(mimeType);
+
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'resume_file', // Must match backend key
+            resumeFile.path!,
+            contentType: mediaType,
+          ),
+        );
+      }
+    }
 
     // Send the request
     var streamedResponse = await request.send();

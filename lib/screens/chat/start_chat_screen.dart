@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
 import '../../services/api_service.dart';
+import '../../widgets/kiit_logo_widget.dart';
 import 'chat_screen.dart';
 
 class StartChatScreen extends StatefulWidget {
@@ -73,6 +74,9 @@ class _StartChatScreenState extends State<StartChatScreen> {
         title: const Text('Start New Chat'),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       body: FutureBuilder<List<User>>(
         future: _teachersFuture,

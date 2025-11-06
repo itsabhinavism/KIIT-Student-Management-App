@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../models/grade_model.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/kiit_logo_widget.dart';
 
 class GradesScreen extends StatelessWidget {
   const GradesScreen({super.key});
@@ -15,6 +16,9 @@ class GradesScreen extends StatelessWidget {
         title: const Text('Academic Report'),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       body: FutureBuilder<List<Grade>>(
         future: context.read<ApiService>().getMyGrades(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/teaching_section_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/kiit_logo_widget.dart';
 
 class CreateNoticeScreen extends StatefulWidget {
   const CreateNoticeScreen({super.key});
@@ -119,6 +120,9 @@ class _CreateNoticeScreenState extends State<CreateNoticeScreen> {
       appBar: AppBar(
         title: const Text('Create Notice/Event'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       body: Form(
         key: _formKey,

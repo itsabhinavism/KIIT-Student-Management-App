@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../services/api_service.dart';
 import '../../models/schedule_model.dart'; // We need this model
 import '../../widgets/app_drawer.dart';
+import '../../widgets/kiit_logo_widget.dart';
 
 /// TeacherAttendanceScreen: Generate QR codes for attendance
 class TeacherAttendanceScreen extends StatefulWidget {
@@ -256,6 +257,9 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
         title: const Text('Start Attendance Session'),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       // MODIFIED: The body now shows one of two states
       body: _sessionId == null

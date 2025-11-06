@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/notice_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/kiit_logo_widget.dart';
 
 class NoticesScreen extends StatefulWidget {
   const NoticesScreen({super.key});
@@ -36,6 +37,9 @@ class _NoticesScreenState extends State<NoticesScreen> {
       appBar: AppBar(
         title: const Text('Notices & Events'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async => _loadNotices(),
