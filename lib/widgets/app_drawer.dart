@@ -20,10 +20,30 @@ class AppDrawer extends StatelessWidget {
         children: [
           UserAccountsDrawerHeader(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
+              gradient: isDarkMode
+                  ? const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF121212), Color(0xFF1E1E1E)],
+                    )
+                  : null,
+              color: isDarkMode ? null : Theme.of(context).colorScheme.primary,
             ),
-            accountName: Text(user?.fullName ?? 'User'),
-            accountEmail: Text(user?.email ?? ''),
+            accountName: Text(
+              user?.fullName ?? 'User',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isDarkMode ? Colors.white : Colors.white,
+              ),
+            ),
+            accountEmail: Text(
+              user?.email ?? '',
+              style: TextStyle(
+                fontSize: 13,
+                color: isDarkMode ? Colors.white70 : Colors.white.withOpacity(0.9),
+              ),
+            ),
             currentAccountPicture: CircleAvatar(
               backgroundColor: Theme.of(context).colorScheme.onPrimary,
               backgroundImage: user?.avatarUrl != null
@@ -253,8 +273,13 @@ void _showHelpSupportDialog(BuildContext context) {
                   icon: const Icon(Icons.copy, size: 18),
                   label: const Text('Copy Email'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.blue.shade700,
-                    side: BorderSide(color: Colors.blue.shade700),
+                    foregroundColor: isDarkMode ? Colors.white : Colors.blue.shade700,
+                    backgroundColor: isDarkMode ? Colors.white.withOpacity(0.06) : Colors.transparent,
+                    side: BorderSide(
+                      color: isDarkMode ? Colors.white70 : Colors.blue.shade700,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
