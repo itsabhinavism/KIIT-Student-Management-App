@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/kiit_logo_widget.dart';
 
 /// TeacherProfileScreen: Profile and settings for teachers
 class TeacherProfileScreen extends StatelessWidget {
@@ -68,6 +69,9 @@ class TeacherProfileScreen extends StatelessWidget {
         title: const Text('Profile'),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

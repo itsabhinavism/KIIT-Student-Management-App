@@ -4,6 +4,7 @@ import '../../models/attendance_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/kiit_logo_widget.dart';
 import '../qr_scanner_screen.dart';
 
 /// StudentAttendanceScreen: Shows attendance summary and QR scanning
@@ -26,6 +27,9 @@ class StudentAttendanceScreen extends StatelessWidget {
         title: const Text('Attendance'),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {

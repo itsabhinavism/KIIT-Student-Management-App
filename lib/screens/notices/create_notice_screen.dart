@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/teaching_section_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/kiit_logo_widget.dart';
 
 class CreateNoticeScreen extends StatefulWidget {
   const CreateNoticeScreen({super.key});
@@ -119,6 +120,9 @@ class _CreateNoticeScreenState extends State<CreateNoticeScreen> {
       appBar: AppBar(
         title: const Text('Create Notice/Event'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       body: Form(
         key: _formKey,
@@ -143,8 +147,8 @@ class _CreateNoticeScreenState extends State<CreateNoticeScreen> {
 
             const SizedBox(height: 16),
 
-            // Scope selector
-            if (isAdmin)
+            // Scope selector (only for admins)
+            if (isAdmin) ...[
               DropdownButtonFormField<String>(
                 initialValue: 'global',
                 decoration: const InputDecoration(
@@ -157,26 +161,12 @@ class _CreateNoticeScreenState extends State<CreateNoticeScreen> {
                 onChanged: (value) {
                   setState(() => _scope = value!);
                 },
-              )
-            else
-              DropdownButtonFormField<String>(
-                initialValue: _scope,
-                decoration: const InputDecoration(
-                  labelText: 'Scope',
-                  border: OutlineInputBorder(),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'section', child: Text('Section')),
-                ],
-                onChanged: (value) {
-                  setState(() => _scope = value!);
-                },
               ),
-
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ],
 
             // Section selector for teachers
-            if (_scope == 'section' && !isAdmin)
+            if (!isAdmin) ...[
               DropdownButtonFormField<String>(
                 initialValue: _selectedUniqueId,
                 decoration: const InputDecoration(
@@ -199,8 +189,8 @@ class _CreateNoticeScreenState extends State<CreateNoticeScreen> {
                   return null;
                 },
               ),
-
-            if (_scope == 'section' && !isAdmin) const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ],
 
             // Title
             TextFormField(

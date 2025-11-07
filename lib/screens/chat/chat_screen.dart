@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/chat_model.dart';
 import '../../services/api_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/kiit_logo_widget.dart';
 import 'package:intl/intl.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -179,6 +180,9 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Text(widget.roomName),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       body: Column(
         children: [

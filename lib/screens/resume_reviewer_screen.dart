@@ -1,9 +1,10 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../providers/auth_provider.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
+import '../widgets/kiit_logo_widget.dart';
 
 class ResumeReviewerScreen extends StatefulWidget {
   const ResumeReviewerScreen({super.key});
@@ -13,7 +14,7 @@ class ResumeReviewerScreen extends StatefulWidget {
 }
 
 class _ResumeReviewerScreenState extends State<ResumeReviewerScreen> {
-  File? _pickedFile;
+  PlatformFile? _pickedFile;
   String? _feedback;
   bool _isLoading = false;
 
@@ -26,11 +27,12 @@ class _ResumeReviewerScreenState extends State<ResumeReviewerScreen> {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
+      withData: kIsWeb, // Load bytes for web
     );
 
     if (result != null) {
       setState(() {
-        _pickedFile = File(result.files.single.path!);
+        _pickedFile = result.files.single;
         _feedback = null; // Clear old review
       });
     }
@@ -75,6 +77,9 @@ class _ResumeReviewerScreenState extends State<ResumeReviewerScreen> {
       appBar: AppBar(
         title: const Text('Resume Reviewer'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -131,7 +136,7 @@ class _ResumeReviewerScreenState extends State<ResumeReviewerScreen> {
               label: Text(
                 _pickedFile == null
                     ? 'Pick a PDF Resume'
-                    : 'File: ${_pickedFile!.path.split('/').last.split('\\').last}',
+                    : 'File: ${_pickedFile!.name}',
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.all(16),

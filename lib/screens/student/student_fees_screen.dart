@@ -4,6 +4,7 @@ import '../../models/fee_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/kiit_logo_widget.dart';
 import 'package:intl/intl.dart';
 
 /// StudentFeesScreen: Shows fee summary and individual fee items
@@ -26,6 +27,9 @@ class StudentFeesScreen extends StatelessWidget {
         title: const Text('Fees'),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {

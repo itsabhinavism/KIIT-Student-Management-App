@@ -4,6 +4,7 @@ import '../../models/chat_model.dart';
 import '../../services/api_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_drawer.dart';
+import '../../widgets/kiit_logo_widget.dart';
 import 'chat_screen.dart';
 import 'start_chat_screen.dart';
 
@@ -40,6 +41,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
         title: const Text('Messages'),
         backgroundColor: Colors.blue.shade700,
         foregroundColor: Colors.white,
+        actions: const [
+          KiitLogoWidget(),
+        ],
       ),
       floatingActionButton: isStudent
           ? FloatingActionButton.extended(

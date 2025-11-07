@@ -5,7 +5,7 @@ import '../screens/chatbot/ai_chat_screen.dart';
 
 // Notifier to manage the floating button position and visibility
 class FloatingButtonPositionNotifier extends ChangeNotifier {
-  Offset _position = const Offset(20, 20); // Bottom-left position
+  Offset _position = const Offset(20, 100); // Bottom-right position, moved up to avoid collision
   bool _isVisible = true;
 
   Offset get position => _position;
@@ -101,16 +101,13 @@ class _FloatingChatButtonState extends State<FloatingChatButton>
           }
 
           if (_isDragging) {
-            // Calculate new position from bottom
-            final currentBottom = screenSize.height - position.dy - 60;
-            final newBottom = currentBottom - details.delta.dy;
-
+            // Calculate new position - fixed to move naturally
             final newPosition = Offset(
-              (position.dx + details.delta.dx).clamp(
+              (position.dx - details.delta.dx).clamp(
                 0.0,
                 screenSize.width - 60,
               ),
-              (screenSize.height - newBottom - 60).clamp(
+              (position.dy - details.delta.dy).clamp(
                 0.0,
                 screenSize.height - 60,
               ),
