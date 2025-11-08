@@ -21,35 +21,16 @@
   <meta name="description" content="A new Flutter project.">
 
   <!-- iOS meta tags & icons -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="sap_portal_app_new">
+  <meta name="apple-mobile-web-app-title" content="sap_portal_app">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>sap_portal_app_new</title>
+  <title>sap_portal_app</title>
   <link rel="manifest" href="manifest.json">
-  
-  <script>
-    // Fix for Flutter web performance measurement error
-    if (window.performance && window.performance.measure) {
-      const originalMeasure = window.performance.measure;
-      window.performance.measure = function() {
-        try {
-          return originalMeasure.apply(this, arguments);
-        } catch (e) {
-          // Suppress the "mark does not exist" error
-          if (e.message && e.message.includes('does not exist')) {
-            console.warn('Performance mark not found:', e.message);
-            return null;
-          }
-          throw e;
-        }
-      };
-    }
-  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

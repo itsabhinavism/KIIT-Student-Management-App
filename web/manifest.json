@@ -1,6 +1,6 @@
 {
-    "name": "sap_portal_app_new",
-    "short_name": "sap_portal_app_new",
+    "name": "sap_portal_app",
+    "short_name": "sap_portal_app",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

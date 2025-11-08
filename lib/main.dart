@@ -20,9 +20,13 @@ import 'screens/student/student_fees_screen.dart';
 import 'screens/teacher/teacher_profile_screen.dart';
 import 'screens/chatbot/ai_chat_screen.dart';
 import 'screens/resume_reviewer_screen.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Use clean URLs on web (no #)
+  setUrlStrategy(PathUrlStrategy());
 
   // Load environment variables
   await dotenv.load(fileName: ".env");
@@ -108,3 +112,4 @@ class KIITPortalApp extends StatelessWidget {
     );
   }
 }
+
