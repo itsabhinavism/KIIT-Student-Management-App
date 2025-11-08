@@ -15,6 +15,9 @@ export PATH="$PATH:$HOME/flutter/bin/cache/dart-sdk/bin"
 flutter config --no-analytics
 flutter config --enable-web
 
-# Get dependencies and build
+# Get dependencies and build with environment variables
 flutter pub get
-flutter build web --release --no-tree-shake-icons
+flutter build web --release --no-tree-shake-icons \
+  --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+  --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+  --dart-define=API_BASE_URL="$API_BASE_URL"
