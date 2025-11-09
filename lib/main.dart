@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -28,8 +29,14 @@ void main() async {
   // Use clean URLs on web (no #)
   setUrlStrategy(PathUrlStrategy());
 
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
+  // Load environment variables (only on non-web platforms)
+  if (!kIsWeb) {
+    try {
+      await dotenv.load(fileName: ".env");
+    } catch (e) {
+      debugPrint("Warning: .env file not found: $e");
+    }
+  }
 
   // Initialize Supabase (Auth & Realtime only)
   await Supabase.initialize(
