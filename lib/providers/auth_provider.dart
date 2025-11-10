@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../models/user_model.dart';
@@ -161,7 +162,10 @@ class AuthProvider extends ChangeNotifier {
   /// Set loading state
   void _setLoading(bool loading) {
     _isLoading = loading;
-    notifyListeners();
+    // Schedule notification for after the current frame to avoid calling during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
   }
 
   /// Upload new avatar to Supabase Storage and update user profile

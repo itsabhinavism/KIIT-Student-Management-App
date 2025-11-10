@@ -22,14 +22,38 @@ import 'screens/teacher/teacher_profile_screen.dart';
 import 'screens/chatbot/ai_chat_screen.dart';
 import 'screens/resume_reviewer_screen.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'firebase_msg.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  debugPrint('🚀 App starting...');
+  
+  // Initialize Firebase (skip on web if causing issues, or ensure web config exists)
+  try {
+    debugPrint('🔥 Initializing Firebase...');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('✅ Firebase initialized');
+    
+    // Initialize Firebase Messaging only on mobile platforms
+    if (!kIsWeb) {
+      debugPrint('📱 Running on mobile - initializing FCM...');
+      await FirebaseMsg().initFCM();
+    } else {
+      debugPrint('🌐 Running on web - skipping FCM');
+    }
+  } catch (e) {
+    debugPrint('❌ Firebase initialization error: $e');
+  }
 
   // Use clean URLs on web (no #)
   setUrlStrategy(PathUrlStrategy());
 
-  // Load environment variables (only on non-web platforms)
+  // Load environment variables (skip on web to prevent file path errors)
   if (!kIsWeb) {
     try {
       await dotenv.load(fileName: ".env");
@@ -119,4 +143,3 @@ class KIITPortalApp extends StatelessWidget {
     );
   }
 }
-
