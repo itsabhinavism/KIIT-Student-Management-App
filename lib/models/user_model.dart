@@ -7,6 +7,8 @@ class User {
     required this.role,
     this.rollNo,
     this.avatarUrl,
+    this.currentSemester,
+    this.enrolledSections,
   });
 
   final String id;
@@ -15,6 +17,8 @@ class User {
   final String role; // 'student' or 'teacher'
   final String? rollNo;
   String? avatarUrl;
+  final int? currentSemester;
+  final String? enrolledSections;
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -25,6 +29,8 @@ class User {
       role: json['role']?.toString() ?? 'student',
       rollNo: json['roll_no']?.toString() ?? json['rollNo']?.toString(),
       avatarUrl: json['avatar_url']?.toString(),
+      currentSemester: json['current_semester'] as int?,
+      enrolledSections: json['enrolled_sections']?.toString(),
     );
   }
 
@@ -36,6 +42,8 @@ class User {
       'role': role,
       if (rollNo != null) 'roll_no': rollNo,
       if (avatarUrl != null) 'avatar_url': avatarUrl,
+      if (currentSemester != null) 'current_semester': currentSemester,
+      if (enrolledSections != null) 'enrolled_sections': enrolledSections,
     };
   }
 }
