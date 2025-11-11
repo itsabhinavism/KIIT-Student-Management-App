@@ -305,16 +305,6 @@ A comprehensive, modern student management system designed specifically for KIIT
 - **AI SDK by Vercel** - AI orchestration
 - **pdf-parse** - PDF text extraction
 
-### Additional Technologies
-
-- **JWT** - Authentication tokens
-- **Row Level Security (RLS)** - Database security
-- **QR Code Generation** - Attendance system
-- **Mobile Scanner** - QR code scanning
-- **Geolocator** - Location services
-- **File Picker** - Document selection
-- **GPT Markdown** - Rich text rendering
-
 ### Notifications (Firebase)
 
 This app integrates Firebase Cloud Messaging on the client to deliver notice/alert notifications. Backend data/storage remains on Supabase; Firebase is used only for push delivery.
@@ -348,6 +338,16 @@ Testing
 - **Netlify** - Web app hosting
 - **Supabase Cloud** - Database & Auth hosting
 - **Git** - Version control
+
+### Additional Technologies
+
+- **JWT** - Authentication tokens
+- **Row Level Security (RLS)** - Database security
+- **QR Code Generation** - Attendance system
+- **Mobile Scanner** - QR code scanning
+- **Geolocator** - Location services
+- **File Picker** - Document selection
+- **GPT Markdown** - Rich text rendering
 
 ---
 
