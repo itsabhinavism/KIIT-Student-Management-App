@@ -315,6 +315,33 @@ A comprehensive, modern student management system designed specifically for KIIT
 - **File Picker** - Document selection
 - **GPT Markdown** - Rich text rendering
 
+### Notifications (Firebase)
+
+This app integrates Firebase Cloud Messaging on the client to deliver notice/alert notifications. Backend data/storage remains on Supabase; Firebase is used only for push delivery.
+
+- Firebase Core + Firebase Messaging on Android
+- Foreground notifications rendered via flutter_local_notifications
+- Background/terminated delivery handled by FCM
+- Token generation and registration hooks (ready to send token to backend)
+- Works with Firebase Console sends (incl. scheduled)
+
+Code map
+- `lib/main.dart` – `Firebase.initializeApp` and FCM bootstrap
+- `lib/firebase_msg.dart` – permission request, token fetch, foreground/background handlers, local notifications
+- `android/app/src/main/AndroidManifest.xml` – notification permissions (`POST_NOTIFICATIONS` for Android 13+)
+- `android/app/build.gradle.kts` – core library desugaring enabled for local notifications
+
+Quick setup (fresh clone)
+1. Create a Firebase project and enable Cloud Messaging
+2. Add your Android app (match `applicationId` in `android/app/build.gradle.kts`)
+3. Download `google-services.json` → place in `android/app/`
+4. Run `flutter pub get` and launch on a device
+
+Testing
+- Run once to register an FCM token (visible in debug console)
+- In Firebase Console → Cloud Messaging → New message → target the app or specific token
+- Foreground: shown via local notifications; Background/terminated: shown by system tray
+
 ### Infrastructure
 
 - **Railway** - Backend hosting (Production)
