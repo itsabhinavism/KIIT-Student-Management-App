@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import '../providers/theme_provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../widgets/kiit_logo_widget.dart';
@@ -14,8 +13,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notificationsEnabled = true;
-
   Future<void> _pickAndUploadAvatar(BuildContext context) async {
     try {
       final picker = ImagePicker();
@@ -66,8 +63,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeNotifier = context.watch<ThemeNotifier>();
-    final isDarkMode = themeNotifier.theme == AppTheme.dark;
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.user;
     final isStudent = user?.role == 'student';
@@ -138,29 +133,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ],
-            ),
-          ),
-          const Divider(height: 1),
-          ListTile(
-            leading: const Icon(Icons.notifications),
-            title: const Text('Notifications'),
-            trailing: Switch(
-              value: _notificationsEnabled,
-              onChanged: (bool value) {
-                setState(() {
-                  _notificationsEnabled = value;
-                });
-              },
-            ),
-          ),
-          ListTile(
-            leading: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
-            title: const Text('Dark Mode'),
-            trailing: Switch(
-              value: isDarkMode,
-              onChanged: (bool value) {
-                context.read<ThemeNotifier>().toggleTheme();
-              },
             ),
           ),
           const Divider(height: 1),
