@@ -331,15 +331,14 @@ A comprehensive, modern student management system designed specifically for KIIT
 
 ### Demo Credentials
 
-```
+
 Student:
-Email: student@kiit.ac.in
-Password: [Contact admin]
+Email: 22052611@kiit.ac.in
+Password: abcdef
 
 Teacher:
-Email: teacher@kiit.ac.in
-Password: [Contact admin]
-```
+Email: demo.teacher@kiit.ac.in
+Password: STRONGpass2025
 
 ---
 
@@ -585,3 +584,4 @@ If you find this project helpful, please consider:
 ---
 
 **Made with ❤️ for KIIT University Students**
+
